@@ -1,11 +1,13 @@
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+import matplotlib.pyplot as plt
 
-def evaluate(model, X_test, y_test):
-    pred = model.predict(X_test)
+def plot_results(levels, rf_acc, lr_acc):
+    plt.plot(levels, rf_acc, marker='o', label='Random Forest')
+    plt.plot(levels, lr_acc, marker='s', label='Logistic Regression')
 
-    acc = accuracy_score(y_test, pred)
-    prec = precision_score(y_test, pred, average='macro')
-    rec = recall_score(y_test, pred, average='macro')
-    f1 = f1_score(y_test, pred, average='macro')
+    plt.xlabel("Distortion Level")
+    plt.ylabel("Accuracy")
+    plt.title("Model Performance Comparison")
+    plt.legend()
+    plt.grid()
 
-    return acc, prec, rec, f1
+    plt.show()
