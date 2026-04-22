@@ -1,6 +1,7 @@
 # AI Model Performance Simulator
 
 Simulates how ML classification models degrade under real-world data distortions — noise, drift, distribution shift, and class imbalance.
+
 ![results](results.png)
 
 ## What it does
