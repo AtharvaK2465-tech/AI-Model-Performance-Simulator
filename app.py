@@ -46,7 +46,7 @@ else:
             df.dropna(axis=0, how='all', inplace=True)
 
             if df.empty:
-                st.error("Uploaded CSV is empty after cleaning.")
+                st.error("❌ Uploaded CSV is empty after cleaning.")
                 st.stop()
 
             # Show preview
@@ -64,32 +64,40 @@ else:
             )
 
             feature_cols = [c for c in columns if c != target_col]
-
-            # ── Feature Processing ──
             feature_df = df[feature_cols].copy()
 
-            # Drop non-numeric feature columns
-            non_numeric_cols = feature_df.select_dtypes(
-                exclude=[np.number]
-            ).columns.tolist()
-            numeric_cols = feature_df.select_dtypes(
-                include=[np.number]
-            ).columns.tolist()
+            # ── Feature Processing ──
+            non_numeric_cols = feature_df.select_dtypes(exclude=[np.number]).columns.tolist()
+            numeric_cols = feature_df.select_dtypes(include=[np.number]).columns.tolist()
 
+            # Auto-encode categorical columns with low cardinality
+            encoded_cols = []
             if non_numeric_cols:
-                st.sidebar.warning(
-                    f"⚠️ Auto-dropped non-numeric columns:\n{non_numeric_cols}"
-                )
+                for col in non_numeric_cols:
+                    unique_vals = feature_df[col].dropna().unique()
+                    if len(unique_vals) <= 20:
+                        col_le = LabelEncoder()
+                        feature_df[col] = feature_df[col].astype(str)
+                        feature_df[col] = col_le.fit_transform(feature_df[col])
+                        encoded_cols.append(col)
 
-            if len(numeric_cols) == 0:
+                dropped_cols = [c for c in non_numeric_cols if c not in encoded_cols]
+                if encoded_cols:
+                    st.sidebar.info(f"ℹ️ Auto-encoded categorical columns: {encoded_cols}")
+                if dropped_cols:
+                    st.sidebar.warning(f"⚠️ Dropped high-cardinality columns: {dropped_cols}")
+
+            all_feature_cols = numeric_cols + encoded_cols
+
+            if len(all_feature_cols) == 0:
                 st.error(
-                    "❌ No numeric feature columns found. "
-                    "Please upload a dataset with at least one numeric feature column."
+                    "❌ No usable feature columns found after processing. "
+                    "Please upload a dataset with numeric or low-cardinality categorical features."
                 )
                 st.stop()
 
-            # Drop rows with NaN in numeric features
-            feature_df = feature_df[numeric_cols].copy()
+            # Drop rows with NaN
+            feature_df = feature_df[all_feature_cols].copy()
             before = len(feature_df)
             feature_df.dropna(inplace=True)
             dropped_rows = before - len(feature_df)
@@ -97,6 +105,11 @@ else:
                 st.sidebar.info(f"ℹ️ Dropped {dropped_rows} rows with missing values.")
 
             X = feature_df.values.astype(float)
+
+            st.sidebar.markdown(
+                f"**Features used:** {len(all_feature_cols)} columns "
+                f"({len(numeric_cols)} numeric, {len(encoded_cols)} encoded)"
+            )
 
             # ── Target Processing ──
             y_raw = df.loc[feature_df.index, target_col].values
@@ -137,9 +150,7 @@ else:
                 st.stop()
 
             # Validate samples per class for stratified split
-            min_class_count = min(
-                np.sum(y == c) for c in np.unique(y)
-            )
+            min_class_count = min(np.sum(y == c) for c in np.unique(y))
             if min_class_count < 2:
                 st.error(
                     "❌ At least one class has fewer than 2 samples. "
@@ -151,7 +162,6 @@ else:
 
             st.sidebar.success(f"✅ CSV loaded: {ds_name}")
             st.sidebar.markdown(f"**Samples:** {n_samples}")
-            st.sidebar.markdown(f"**Features used:** {len(numeric_cols)} numeric columns")
             st.sidebar.markdown(f"**Classes:** {n_classes} → {list(le.classes_[:5])}"
                                 + ("..." if n_classes > 5 else ""))
 
@@ -251,11 +261,11 @@ if st.sidebar.button("▶ Run Simulation"):
 
     for ax, metric, title in zip(axes.flat, METRICS, TITLES):
         ax.plot(distortion_levels, [r[metric] for r in rf_results],
-                marker='o', label='Random Forest',      color='steelblue')
+                marker='o', label='Random Forest',       color='steelblue')
         ax.plot(distortion_levels, [r[metric] for r in lr_results],
                 marker='s', label='Logistic Regression', color='tomato')
         ax.plot(distortion_levels, [r[metric] for r in svm_results],
-                marker='^', label='SVM',                color='seagreen')
+                marker='^', label='SVM',                 color='seagreen')
         ax.set_title(title)
         ax.set_xlabel("Distortion Level")
         ax.set_ylabel(metric.capitalize())
