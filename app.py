@@ -3,7 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from collections import Counter
 
 from model import load_dataset, train_models
 from distortions import apply_distortion
@@ -19,6 +20,17 @@ st.sidebar.header("⚙️ Configuration")
 dataset_source = st.sidebar.radio("Dataset Source", ["Built-in Dataset", "Upload CSV"])
 
 X, y, ds_name = None, None, None
+
+# ─── Helper: Detect Regression Target ──────────────────────────────────────────
+def is_regression_target(values, threshold=0.05):
+    try:
+        vals = pd.to_numeric(values, errors='coerce')
+        if vals.isnull().all():
+            return False
+        unique_ratio = len(vals.dropna().unique()) / len(vals.dropna())
+        return unique_ratio > threshold and len(vals.dropna().unique()) > 20
+    except Exception:
+        return False
 
 # ─── Built-in Dataset ──────────────────────────────────────────────────────────
 if dataset_source == "Built-in Dataset":
@@ -38,7 +50,6 @@ else:
 
     if uploaded_file is not None:
         try:
-            # Read CSV
             df = pd.read_csv(uploaded_file)
 
             # Drop completely empty rows/columns
@@ -49,6 +60,14 @@ else:
                 st.error("❌ Uploaded CSV is empty after cleaning.")
                 st.stop()
 
+            if len(df) < 20:
+                st.error(f"❌ Dataset has only {len(df)} rows. Need at least 20 samples.")
+                st.stop()
+
+            if len(df.columns) < 2:
+                st.error("❌ Dataset needs at least 2 columns (1 feature + 1 target).")
+                st.stop()
+
             # Show preview
             st.subheader("📄 Uploaded Data Preview")
             st.dataframe(df.head(10), use_container_width=True)
@@ -56,21 +75,38 @@ else:
 
             # Target column selection
             columns = df.columns.tolist()
-            default_target_idx = len(columns) - 1
             target_col = st.sidebar.selectbox(
                 "Select Target Column",
                 columns,
-                index=default_target_idx
+                index=len(columns) - 1
             )
 
+            # Regression target warning
+            if is_regression_target(df[target_col].values):
+                st.warning(
+                    f"⚠️ The column **'{target_col}'** looks like a continuous/regression target "
+                    f"({df[target_col].nunique()} unique values). "
+                    "This simulator is for **classification only**. "
+                    "Please select a categorical target column (e.g. labels, classes, categories)."
+                )
+
             feature_cols = [c for c in columns if c != target_col]
-            feature_df = df[feature_cols].copy()
+            feature_df   = df[feature_cols].copy()
 
             # ── Feature Processing ──
             non_numeric_cols = feature_df.select_dtypes(exclude=[np.number]).columns.tolist()
-            numeric_cols = feature_df.select_dtypes(include=[np.number]).columns.tolist()
+            numeric_cols     = feature_df.select_dtypes(include=[np.number]).columns.tolist()
 
-            # Auto-encode categorical columns with low cardinality
+            # Drop ID-like numeric columns
+            id_like_cols = [
+                col for col in numeric_cols
+                if feature_df[col].nunique() == len(feature_df)
+            ]
+            if id_like_cols:
+                numeric_cols = [c for c in numeric_cols if c not in id_like_cols]
+                st.sidebar.warning(f"⚠️ Dropped ID-like columns: {id_like_cols}")
+
+            # Auto-encode low-cardinality categorical columns
             encoded_cols = []
             if non_numeric_cols:
                 for col in non_numeric_cols:
@@ -83,7 +119,7 @@ else:
 
                 dropped_cols = [c for c in non_numeric_cols if c not in encoded_cols]
                 if encoded_cols:
-                    st.sidebar.info(f"ℹ️ Auto-encoded categorical columns: {encoded_cols}")
+                    st.sidebar.info(f"ℹ️ Auto-encoded: {encoded_cols}")
                 if dropped_cols:
                     st.sidebar.warning(f"⚠️ Dropped high-cardinality columns: {dropped_cols}")
 
@@ -91,23 +127,43 @@ else:
 
             if len(all_feature_cols) == 0:
                 st.error(
-                    "❌ No usable feature columns found after processing. "
-                    "Please upload a dataset with numeric or low-cardinality categorical features."
+                    "❌ No usable feature columns found. "
+                    "Need at least 1 numeric or low-cardinality categorical feature column."
                 )
                 st.stop()
 
-            # Drop rows with NaN
-            feature_df = feature_df[all_feature_cols].copy()
-            before = len(feature_df)
+            if len(all_feature_cols) == 1:
+                st.warning(
+                    "⚠️ Only 1 feature column found. Results may be unreliable. "
+                    "Consider uploading a richer dataset."
+                )
+
+            # Drop duplicates
+            feature_df   = feature_df[all_feature_cols].copy()
+            before_dedup = len(feature_df)
+            feature_df   = feature_df.drop_duplicates()
+            dupes        = before_dedup - len(feature_df)
+            if dupes > 0:
+                st.sidebar.info(f"ℹ️ Removed {dupes} duplicate rows.")
+
+            # Drop NaN rows
+            before_nan  = len(feature_df)
             feature_df.dropna(inplace=True)
-            dropped_rows = before - len(feature_df)
-            if dropped_rows > 0:
-                st.sidebar.info(f"ℹ️ Dropped {dropped_rows} rows with missing values.")
+            dropped_nan = before_nan - len(feature_df)
+            if dropped_nan > 0:
+                st.sidebar.info(f"ℹ️ Dropped {dropped_nan} rows with missing values.")
+
+            if len(feature_df) < 20:
+                st.error(
+                    f"❌ Only {len(feature_df)} usable rows remain after cleaning. "
+                    "Need at least 20."
+                )
+                st.stop()
 
             X = feature_df.values.astype(float)
 
             st.sidebar.markdown(
-                f"**Features used:** {len(all_feature_cols)} columns "
+                f"**Features used:** {len(all_feature_cols)} "
                 f"({len(numeric_cols)} numeric, {len(encoded_cols)} encoded)"
             )
 
@@ -119,7 +175,7 @@ else:
             if target_nan_mask.any():
                 count = target_nan_mask.sum()
                 st.sidebar.info(f"ℹ️ Dropped {count} rows with missing target values.")
-                X = X[~target_nan_mask]
+                X     = X[~target_nan_mask]
                 y_raw = y_raw[~target_nan_mask]
 
             # Encode target
@@ -133,37 +189,50 @@ else:
             n_classes = len(np.unique(y))
             n_samples = len(y)
 
-            # Validate minimum samples
             if n_samples < 20:
-                st.error(
-                    f"❌ Too few samples ({n_samples}). "
-                    "Need at least 20 samples to run simulation."
-                )
+                st.error(f"❌ Too few samples ({n_samples}). Need at least 20.")
                 st.stop()
 
-            # Validate minimum classes
             if n_classes < 2:
                 st.error(
-                    "❌ Target column has only 1 class. "
+                    f"❌ Target column **'{target_col}'** has only 1 unique class. "
                     "Need at least 2 classes for classification."
                 )
                 st.stop()
 
-            # Validate samples per class for stratified split
-            min_class_count = min(np.sum(y == c) for c in np.unique(y))
-            if min_class_count < 2:
+            if n_classes > 50:
                 st.error(
-                    "❌ At least one class has fewer than 2 samples. "
-                    "Please use a dataset with more samples per class."
+                    f"❌ Target column has {n_classes} unique classes — this looks like a "
+                    "regression or ID column. Please select a column with fewer unique values."
                 )
                 st.stop()
 
-            ds_name = uploaded_file.name
+            # Class balance check
+            class_counts    = Counter(y)
+            min_class_count = min(class_counts.values())
+            max_class_count = max(class_counts.values())
+            imbalance_ratio = max_class_count / min_class_count
 
+            if min_class_count < 2:
+                st.error(
+                    f"❌ At least one class has only {min_class_count} sample(s). "
+                    "Need at least 2 samples per class for stratified splitting."
+                )
+                st.stop()
+
+            if imbalance_ratio > 10:
+                st.warning(
+                    f"⚠️ Dataset is highly imbalanced (ratio {imbalance_ratio:.1f}x). "
+                    "Results at high distortion levels may be unreliable."
+                )
+
+            ds_name = uploaded_file.name
             st.sidebar.success(f"✅ CSV loaded: {ds_name}")
             st.sidebar.markdown(f"**Samples:** {n_samples}")
-            st.sidebar.markdown(f"**Classes:** {n_classes} → {list(le.classes_[:5])}"
-                                + ("..." if n_classes > 5 else ""))
+            st.sidebar.markdown(
+                f"**Classes:** {n_classes} → {list(le.classes_[:5])}"
+                + ("..." if n_classes > 5 else "")
+            )
 
         except pd.errors.EmptyDataError:
             st.error("❌ The uploaded file is empty.")
@@ -178,10 +247,29 @@ else:
     else:
         st.info("👈 Upload a CSV file from the sidebar to get started, or switch to a built-in dataset.")
 
-# ─── Distortion Settings ───────────────────────────────────────────────────────
-st.sidebar.header("🎛️ Distortion Settings")
-max_level = st.sidebar.slider("Max Distortion Level", 0.1, 1.0, 0.4, step=0.1)
-num_levels = st.sidebar.slider("Number of Levels", 3, 10, 5)
+# ─── Simulation Settings ───────────────────────────────────────────────────────
+st.sidebar.header("🎛️ Simulation Settings")
+
+max_level = st.sidebar.slider(
+    "Max Distortion Level", 0.1, 1.0, 0.4, step=0.1,
+    help="How severe the distortions get. 0.1 = mild, 1.0 = extreme."
+)
+num_levels = st.sidebar.slider(
+    "Number of Distortion Levels", 3, 10, 5,
+    help="How many steps between 0 and max distortion level."
+)
+test_size = st.sidebar.slider(
+    "Test Set Size", 0.1, 0.4, 0.2, step=0.05,
+    help="Fraction of data held out for testing. Default 0.2 = 20%."
+)
+scale_data = st.sidebar.checkbox(
+    "Scale Features (StandardScaler)", value=True,
+    help="Normalize features before training. Recommended for LR and SVM."
+)
+random_seed = st.sidebar.number_input(
+    "Random Seed", min_value=0, max_value=9999, value=42, step=1,
+    help="Set seed for reproducibility. Change to get different train/test splits."
+)
 
 # ─── Run Simulation ────────────────────────────────────────────────────────────
 if st.sidebar.button("▶ Run Simulation"):
@@ -192,11 +280,20 @@ if st.sidebar.button("▶ Run Simulation"):
 
     distortion_levels = list(np.linspace(0, max_level, num_levels))
 
-    # Train models
+    # Scale features
+    X_scaled = X.copy()
+    if scale_data:
+        scaler   = StandardScaler()
+        X_scaled = scaler.fit_transform(X_scaled)
+
+    # Train/test split
     with st.spinner("Training models on clean data..."):
         try:
             X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=0.2, random_state=42, stratify=y
+                X_scaled, y,
+                test_size=test_size,
+                random_state=int(random_seed),
+                stratify=y
             )
             rf, lr, svm = train_models(X_train, y_train)
         except ValueError as ve:
@@ -209,31 +306,38 @@ if st.sidebar.button("▶ Run Simulation"):
     st.success(
         f"✅ Models trained on **{ds_name}** | "
         f"Samples: {len(y)} | Features: {X.shape[1]} | "
-        f"Classes: {len(np.unique(y))}"
+        f"Classes: {len(np.unique(y))} | "
+        f"Train: {len(X_train)} | Test: {len(X_test)}"
     )
+
+    empty_result = {
+        "accuracy": 0, "precision": 0, "recall": 0,
+        "f1": 0, "roc_auc": 0, "confidence": 0
+    }
 
     rf_results, lr_results, svm_results = [], [], []
     progress = st.progress(0)
-    status = st.empty()
+    status   = st.empty()
 
     for i, level in enumerate(distortion_levels):
         status.text(f"Evaluating distortion level {round(level, 3)}...")
         try:
             X_dist, y_dist = apply_distortion(
                 X_test.copy(), y_test.copy(),
-                noise_level=level,
-                drift_level=level,
-                dist_shift_level=level,
-                imbalance_level=level
+                noise_level      = level,
+                drift_level      = level,
+                dist_shift_level = level,
+                imbalance_level  = level
             )
 
-            if len(np.unique(y_dist)) < 2:
+            if len(X_dist) == 0 or len(np.unique(y_dist)) < 2:
                 st.warning(
-                    f"⚠️ Level {round(level, 2)}: Only 1 class left after imbalance — skipping."
+                    f"⚠️ Level {round(level, 2)}: "
+                    "Not enough class diversity after distortion — skipping."
                 )
-                rf_results.append({"accuracy": 0, "precision": 0, "recall": 0, "f1": 0})
-                lr_results.append({"accuracy": 0, "precision": 0, "recall": 0, "f1": 0})
-                svm_results.append({"accuracy": 0, "precision": 0, "recall": 0, "f1": 0})
+                rf_results.append(empty_result.copy())
+                lr_results.append(empty_result.copy())
+                svm_results.append(empty_result.copy())
             else:
                 rf_results.append(evaluate(rf,  X_dist, y_dist))
                 lr_results.append(evaluate(lr,  X_dist, y_dist))
@@ -241,19 +345,26 @@ if st.sidebar.button("▶ Run Simulation"):
 
         except Exception as e:
             st.warning(f"⚠️ Error at level {round(level, 2)}: {e} — skipping.")
-            rf_results.append({"accuracy": 0, "precision": 0, "recall": 0, "f1": 0})
-            lr_results.append({"accuracy": 0, "precision": 0, "recall": 0, "f1": 0})
-            svm_results.append({"accuracy": 0, "precision": 0, "recall": 0, "f1": 0})
+            rf_results.append(empty_result.copy())
+            lr_results.append(empty_result.copy())
+            svm_results.append(empty_result.copy())
 
         progress.progress((i + 1) / len(distortion_levels))
 
     status.text("✅ Simulation complete!")
 
-    # ─── Plot ──────────────────────────────────────────────────────────────────
-    METRICS = ["accuracy", "precision", "recall", "f1"]
-    TITLES  = ["Accuracy", "Precision (macro)", "Recall (macro)", "F1 Score (macro)"]
+    # ─── Plot 2×3 grid ─────────────────────────────────────────────────────────
+    METRICS = ["accuracy", "precision", "recall", "f1", "roc_auc", "confidence"]
+    TITLES  = [
+        "Accuracy",
+        "Precision (macro)",
+        "Recall (macro)",
+        "F1 Score (macro)",
+        "ROC-AUC Score",
+        "Model Confidence",
+    ]
 
-    fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+    fig, axes = plt.subplots(2, 3, figsize=(16, 9))
     fig.suptitle(
         f"Model Performance Under Increasing Distortion\nDataset: {ds_name}",
         fontsize=13, fontweight="bold"
@@ -268,26 +379,48 @@ if st.sidebar.button("▶ Run Simulation"):
                 marker='^', label='SVM',                 color='seagreen')
         ax.set_title(title)
         ax.set_xlabel("Distortion Level")
-        ax.set_ylabel(metric.capitalize())
+        ax.set_ylabel(metric.replace("_", " ").capitalize())
         ax.set_ylim(0, 1.05)
-        ax.legend()
+        ax.legend(fontsize=8)
         ax.grid(True, linestyle='--', alpha=0.6)
 
     plt.tight_layout()
     st.pyplot(fig)
+
+    # ─── Dataset & Run Info ────────────────────────────────────────────────────
+    with st.expander("📋 Dataset & Run Info"):
+        col1, col2, col3, col4 = st.columns(4)
+        col1.metric("Total Samples",  len(y))
+        col2.metric("Features Used",  X.shape[1])
+        col3.metric("Classes",        len(np.unique(y)))
+        col4.metric("Test Size",      f"{int(test_size * 100)}%")
+        col1.metric("Train Samples",  len(X_train))
+        col2.metric("Test Samples",   len(X_test))
+        col3.metric("Random Seed",    int(random_seed))
+        col4.metric("Feature Scaling","Yes" if scale_data else "No")
+
+        st.markdown("**Class Distribution:**")
+        class_dist = pd.Series(Counter(y)).sort_index()
+        st.bar_chart(class_dist)
 
     # ─── Results Table ─────────────────────────────────────────────────────────
     st.subheader("📊 Results Table")
     rows = []
     for i, level in enumerate(distortion_levels):
         rows.append({
-            "Level":   round(level, 3),
-            "RF Acc":  round(rf_results[i]["accuracy"],  3),
-            "RF F1":   round(rf_results[i]["f1"],        3),
-            "LR Acc":  round(lr_results[i]["accuracy"],  3),
-            "LR F1":   round(lr_results[i]["f1"],        3),
-            "SVM Acc": round(svm_results[i]["accuracy"], 3),
-            "SVM F1":  round(svm_results[i]["f1"],       3),
+            "Level":    round(level, 3),
+            "RF Acc":   round(rf_results[i]["accuracy"],   3),
+            "RF F1":    round(rf_results[i]["f1"],         3),
+            "RF AUC":   round(rf_results[i]["roc_auc"],    3),
+            "RF Conf":  round(rf_results[i]["confidence"], 3),
+            "LR Acc":   round(lr_results[i]["accuracy"],   3),
+            "LR F1":    round(lr_results[i]["f1"],         3),
+            "LR AUC":   round(lr_results[i]["roc_auc"],    3),
+            "LR Conf":  round(lr_results[i]["confidence"], 3),
+            "SVM Acc":  round(svm_results[i]["accuracy"],  3),
+            "SVM F1":   round(svm_results[i]["f1"],        3),
+            "SVM AUC":  round(svm_results[i]["roc_auc"],   3),
+            "SVM Conf": round(svm_results[i]["confidence"],3),
         })
     results_df = pd.DataFrame(rows)
     st.dataframe(results_df, use_container_width=True)
