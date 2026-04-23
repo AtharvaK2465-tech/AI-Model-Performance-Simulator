@@ -52,36 +52,28 @@ else:
         try:
             df = pd.read_csv(uploaded_file)
 
-            # Drop completely empty rows/columns
             df.dropna(axis=1, how='all', inplace=True)
             df.dropna(axis=0, how='all', inplace=True)
 
             if df.empty:
                 st.error("❌ Uploaded CSV is empty after cleaning.")
                 st.stop()
-
             if len(df) < 20:
                 st.error(f"❌ Dataset has only {len(df)} rows. Need at least 20 samples.")
                 st.stop()
-
             if len(df.columns) < 2:
                 st.error("❌ Dataset needs at least 2 columns (1 feature + 1 target).")
                 st.stop()
 
-            # Show preview
             st.subheader("📄 Uploaded Data Preview")
             st.dataframe(df.head(10), use_container_width=True)
             st.caption(f"Shape: {df.shape[0]} rows × {df.shape[1]} columns")
 
-            # Target column selection
-            columns = df.columns.tolist()
+            columns    = df.columns.tolist()
             target_col = st.sidebar.selectbox(
-                "Select Target Column",
-                columns,
-                index=len(columns) - 1
+                "Select Target Column", columns, index=len(columns) - 1
             )
 
-            # Regression target warning
             if is_regression_target(df[target_col].values):
                 st.warning(
                     f"⚠️ The column **'{target_col}'** looks like a continuous/regression target "
@@ -90,14 +82,12 @@ else:
                     "Please select a categorical target column (e.g. labels, classes, categories)."
                 )
 
-            feature_cols = [c for c in columns if c != target_col]
-            feature_df   = df[feature_cols].copy()
-
-            # ── Feature Processing ──
+            feature_cols     = [c for c in columns if c != target_col]
+            feature_df       = df[feature_cols].copy()
             non_numeric_cols = feature_df.select_dtypes(exclude=[np.number]).columns.tolist()
             numeric_cols     = feature_df.select_dtypes(include=[np.number]).columns.tolist()
 
-            # Drop ID-like numeric columns
+            # Drop ID-like columns
             id_like_cols = [
                 col for col in numeric_cols
                 if feature_df[col].nunique() == len(feature_df)
@@ -116,7 +106,6 @@ else:
                         feature_df[col] = feature_df[col].astype(str)
                         feature_df[col] = col_le.fit_transform(feature_df[col])
                         encoded_cols.append(col)
-
                 dropped_cols = [c for c in non_numeric_cols if c not in encoded_cols]
                 if encoded_cols:
                     st.sidebar.info(f"ℹ️ Auto-encoded: {encoded_cols}")
@@ -131,14 +120,12 @@ else:
                     "Need at least 1 numeric or low-cardinality categorical feature column."
                 )
                 st.stop()
-
             if len(all_feature_cols) == 1:
                 st.warning(
                     "⚠️ Only 1 feature column found. Results may be unreliable. "
                     "Consider uploading a richer dataset."
                 )
 
-            # Drop duplicates
             feature_df   = feature_df[all_feature_cols].copy()
             before_dedup = len(feature_df)
             feature_df   = feature_df.drop_duplicates()
@@ -146,7 +133,6 @@ else:
             if dupes > 0:
                 st.sidebar.info(f"ℹ️ Removed {dupes} duplicate rows.")
 
-            # Drop NaN rows
             before_nan  = len(feature_df)
             feature_df.dropna(inplace=True)
             dropped_nan = before_nan - len(feature_df)
@@ -161,16 +147,12 @@ else:
                 st.stop()
 
             X = feature_df.values.astype(float)
-
             st.sidebar.markdown(
                 f"**Features used:** {len(all_feature_cols)} "
                 f"({len(numeric_cols)} numeric, {len(encoded_cols)} encoded)"
             )
 
-            # ── Target Processing ──
-            y_raw = df.loc[feature_df.index, target_col].values
-
-            # Handle NaN in target
+            y_raw           = df.loc[feature_df.index, target_col].values
             target_nan_mask = pd.isnull(y_raw)
             if target_nan_mask.any():
                 count = target_nan_mask.sum()
@@ -178,7 +160,6 @@ else:
                 X     = X[~target_nan_mask]
                 y_raw = y_raw[~target_nan_mask]
 
-            # Encode target
             le = LabelEncoder()
             try:
                 y = le.fit_transform(y_raw.astype(str))
@@ -192,14 +173,12 @@ else:
             if n_samples < 20:
                 st.error(f"❌ Too few samples ({n_samples}). Need at least 20.")
                 st.stop()
-
             if n_classes < 2:
                 st.error(
                     f"❌ Target column **'{target_col}'** has only 1 unique class. "
                     "Need at least 2 classes for classification."
                 )
                 st.stop()
-
             if n_classes > 50:
                 st.error(
                     f"❌ Target column has {n_classes} unique classes — this looks like a "
@@ -207,7 +186,6 @@ else:
                 )
                 st.stop()
 
-            # Class balance check
             class_counts    = Counter(y)
             min_class_count = min(class_counts.values())
             max_class_count = max(class_counts.values())
@@ -219,7 +197,6 @@ else:
                     "Need at least 2 samples per class for stratified splitting."
                 )
                 st.stop()
-
             if imbalance_ratio > 10:
                 st.warning(
                     f"⚠️ Dataset is highly imbalanced (ratio {imbalance_ratio:.1f}x). "
@@ -271,6 +248,31 @@ random_seed = st.sidebar.number_input(
     help="Set seed for reproducibility. Change to get different train/test splits."
 )
 
+# ─── Distortion Type Selection ─────────────────────────────────────────────────
+st.sidebar.header("🧪 Distortion Types")
+st.sidebar.markdown("Select which distortions to apply:")
+
+use_noise       = st.sidebar.checkbox("Gaussian Noise",     value=True,
+    help="Adds random Gaussian noise to all feature values.")
+use_drift       = st.sidebar.checkbox("Covariate Drift",    value=True,
+    help="Shifts the mean of all features (simulates data drift over time).")
+use_dist_shift  = st.sidebar.checkbox("Distribution Shift", value=True,
+    help="Expands/compresses feature variance.")
+use_imbalance   = st.sidebar.checkbox("Class Imbalance",    value=True,
+    help="Progressively drops minority class samples.")
+use_missing     = st.sidebar.checkbox("Missing Values",     value=False,
+    help="Randomly injects NaN into features, filled with column mean.")
+use_label_noise = st.sidebar.checkbox("Label Noise",        value=False,
+    help="Randomly flips class labels — simulates annotation errors.")
+use_outliers    = st.sidebar.checkbox("Outlier Injection",  value=False,
+    help="Injects extreme values (±5 std devs) into random samples.")
+use_corruption  = st.sidebar.checkbox("Feature Corruption", value=False,
+    help="Zeros out random feature columns — simulates sensor failure.")
+
+if not any([use_noise, use_drift, use_dist_shift, use_imbalance,
+            use_missing, use_label_noise, use_outliers, use_corruption]):
+    st.sidebar.warning("⚠️ No distortions selected. Results will be flat lines.")
+
 # ─── Run Simulation ────────────────────────────────────────────────────────────
 if st.sidebar.button("▶ Run Simulation"):
 
@@ -280,13 +282,11 @@ if st.sidebar.button("▶ Run Simulation"):
 
     distortion_levels = list(np.linspace(0, max_level, num_levels))
 
-    # Scale features
     X_scaled = X.copy()
     if scale_data:
         scaler   = StandardScaler()
         X_scaled = scaler.fit_transform(X_scaled)
 
-    # Train/test split
     with st.spinner("Training models on clean data..."):
         try:
             X_train, X_test, y_train, y_test = train_test_split(
@@ -324,10 +324,14 @@ if st.sidebar.button("▶ Run Simulation"):
         try:
             X_dist, y_dist = apply_distortion(
                 X_test.copy(), y_test.copy(),
-                noise_level      = level,
-                drift_level      = level,
-                dist_shift_level = level,
-                imbalance_level  = level
+                noise_level       = level if use_noise       else 0.0,
+                drift_level       = level if use_drift       else 0.0,
+                dist_shift_level  = level if use_dist_shift  else 0.0,
+                imbalance_level   = level if use_imbalance   else 0.0,
+                missing_level     = level if use_missing     else 0.0,
+                label_noise_level = level if use_label_noise else 0.0,
+                outlier_level     = level if use_outliers    else 0.0,
+                corruption_level  = level if use_corruption  else 0.0,
             )
 
             if len(X_dist) == 0 or len(np.unique(y_dist)) < 2:
@@ -390,14 +394,14 @@ if st.sidebar.button("▶ Run Simulation"):
     # ─── Dataset & Run Info ────────────────────────────────────────────────────
     with st.expander("📋 Dataset & Run Info"):
         col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Total Samples",  len(y))
-        col2.metric("Features Used",  X.shape[1])
-        col3.metric("Classes",        len(np.unique(y)))
-        col4.metric("Test Size",      f"{int(test_size * 100)}%")
-        col1.metric("Train Samples",  len(X_train))
-        col2.metric("Test Samples",   len(X_test))
-        col3.metric("Random Seed",    int(random_seed))
-        col4.metric("Feature Scaling","Yes" if scale_data else "No")
+        col1.metric("Total Samples",   len(y))
+        col2.metric("Features Used",   X.shape[1])
+        col3.metric("Classes",         len(np.unique(y)))
+        col4.metric("Test Size",       f"{int(test_size * 100)}%")
+        col1.metric("Train Samples",   len(X_train))
+        col2.metric("Test Samples",    len(X_test))
+        col3.metric("Random Seed",     int(random_seed))
+        col4.metric("Feature Scaling", "Yes" if scale_data else "No")
 
         st.markdown("**Class Distribution:**")
         class_dist = pd.Series(Counter(y)).sort_index()
