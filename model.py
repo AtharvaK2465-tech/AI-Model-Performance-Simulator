@@ -36,7 +36,7 @@ def load_dataset(name="iris", csv_path=None):
 def train_models(X_train, y_train):
     """Returns trained (RandomForest, LogisticRegression, SVM)."""
     rf  = RandomForestClassifier(n_estimators=100, random_state=42)
-    lr  = LogisticRegression(max_iter=500, random_state=42)
+    lr  = LogisticRegression(max_iter=2000, random_state=42)
     svm = SVC(kernel='rbf', random_state=42)
     rf.fit(X_train, y_train)
     lr.fit(X_train, y_train)
