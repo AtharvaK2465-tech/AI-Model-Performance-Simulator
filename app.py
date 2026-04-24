@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,6 +10,7 @@ from collections import Counter
 from model import load_dataset, train_models
 from distortions import apply_distortion
 from evaluation import evaluate
+from run_logger import save_run, load_all_runs
 
 # ─── Page Config ───────────────────────────────────────────────────────────────
 st.set_page_config(page_title="AI Model Performance Simulator", layout="wide")
@@ -436,3 +438,78 @@ if st.sidebar.button("▶ Run Simulation"):
         file_name="simulation_results.csv",
         mime="text/csv"
     )
+
+    # ─── Save Run ──────────────────────────────────────────────────────────────
+    settings = {
+        "max_distortion_level": max_level,
+        "num_levels":           num_levels,
+        "test_size":            test_size,
+        "scale_data":           scale_data,
+        "random_seed":          int(random_seed),
+    }
+    distortions_used = {
+        "gaussian_noise":     use_noise,
+        "covariate_drift":    use_drift,
+        "distribution_shift": use_dist_shift,
+        "class_imbalance":    use_imbalance,
+        "missing_values":     use_missing,
+        "label_noise":        use_label_noise,
+        "outlier_injection":  use_outliers,
+        "feature_corruption": use_corruption,
+    }
+    run_id, run_dir = save_run(
+        ds_name, settings, distortions_used,
+        distortion_levels, rf_results, lr_results, svm_results, fig
+    )
+    st.info(f"💾 Run #{run_id:03d} saved to `{run_dir}/`")
+
+# ─── Run History ───────────────────────────────────────────────────────────────
+st.markdown("---")
+st.subheader("🕓 Run History")
+all_runs = load_all_runs()
+if not all_runs:
+    st.info("No runs saved yet. Run a simulation to see history here.")
+else:
+    st.markdown(f"**{len(all_runs)} run(s) saved**")
+    for run in reversed(all_runs):
+        distortions_on = [k for k, v in run["distortions_used"].items() if v]
+        with st.expander(
+            f"Run #{run['run_id']:03d} — {run['timestamp']} — "
+            f"Dataset: {run['dataset']} — "
+            f"Max Level: {run['settings']['max_distortion_level']}"
+        ):
+            col1, col2, col3, col4 = st.columns(4)
+            col1.metric("Dataset",     run["dataset"])
+            col2.metric("Max Level",   run["settings"]["max_distortion_level"])
+            col3.metric("Test Size",   f"{int(run['settings']['test_size']*100)}%")
+            col4.metric("Seed",        run["settings"]["random_seed"])
+
+            st.caption(
+                f"Distortions applied: "
+                f"{', '.join(distortions_on) if distortions_on else 'None'}"
+            )
+
+            if run.get("_png_path") and os.path.exists(run["_png_path"]):
+                st.image(run["_png_path"], use_column_width=True)
+            else:
+                st.warning("Chart image not found for this run.")
+
+            rows = []
+            levels_list = run["levels"]
+            rf_res  = run["results"]["random_forest"]
+            lr_res  = run["results"]["logistic_regression"]
+            svm_res = run["results"]["svm"]
+            for i, level in enumerate(levels_list):
+                rows.append({
+                    "Level":   round(level, 3),
+                    "RF Acc":  round(rf_res[i].get("accuracy",  0), 3),
+                    "RF F1":   round(rf_res[i].get("f1",        0), 3),
+                    "RF AUC":  round(rf_res[i].get("roc_auc",   0), 3),
+                    "LR Acc":  round(lr_res[i].get("accuracy",  0), 3),
+                    "LR F1":   round(lr_res[i].get("f1",        0), 3),
+                    "LR AUC":  round(lr_res[i].get("roc_auc",   0), 3),
+                    "SVM Acc": round(svm_res[i].get("accuracy", 0), 3),
+                    "SVM F1":  round(svm_res[i].get("f1",       0), 3),
+                    "SVM AUC": round(svm_res[i].get("roc_auc",  0), 3),
+                })
+            st.dataframe(pd.DataFrame(rows), use_container_width=True)
