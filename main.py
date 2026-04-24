@@ -17,17 +17,16 @@ def parse_args():
                         help="Path to a custom CSV file (last column = target)")
     parser.add_argument("--levels",  nargs="+", type=float,
                         default=[0.0, 0.1, 0.2, 0.3, 0.4],
-                        help="Distortion levels to simulate (e.g. --levels 0 0.1 0.2 0.3)")
+                        help="Distortion levels to simulate")
     parser.add_argument("--save",    default="results.png",
                         help="Output path for the plot image")
     return parser.parse_args()
 
 
 def main():
-    args = parse_args()
+    args   = parse_args()
     levels = sorted(args.levels)
 
-    # Load data
     X, y, ds_name = load_dataset(name=args.dataset, csv_path=args.csv)
     print(f"\n[✓] Dataset loaded: {ds_name}  | Samples: {len(y)}  | Features: {X.shape[1]}")
 
@@ -35,23 +34,22 @@ def main():
         X, y, test_size=0.2, random_state=42, stratify=y
     )
 
-    # Train on clean data
     rf, lr, svm = train_models(X_train, y_train)
     print("[✓] Models trained: Random Forest, Logistic Regression, SVM\n")
 
     rf_results, lr_results, svm_results = [], [], []
 
-    header = f"{'Level':>7} | {'RF Acc':>7} {'RF F1':>7} | {'LR Acc':>7} {'LR F1':>7} | {'SVM Acc':>8} {'SVM F1':>7}"
+    header = f"{'Level':>7} | {'RF Acc':>7} {'RF F1':>7} {'RF AUC':>7} | {'LR Acc':>7} {'LR F1':>7} {'LR AUC':>7} | {'SVM Acc':>8} {'SVM F1':>7} {'SVM AUC':>8}"
     print(header)
     print("-" * len(header))
 
     for level in levels:
         X_dist, y_dist = apply_distortion(
             X_test.copy(), y_test.copy(),
-            noise_level=level,
-            drift_level=level,
-            dist_shift_level=level,
-            imbalance_level=level
+            noise_level      = level,
+            drift_level      = level,
+            dist_shift_level = level,
+            imbalance_level  = level
         )
 
         r_rf  = evaluate(rf,  X_dist, y_dist)
@@ -64,9 +62,9 @@ def main():
 
         print(
             f"{level:>7.1f} | "
-            f"{r_rf['accuracy']:>7.3f} {r_rf['f1']:>7.3f} | "
-            f"{r_lr['accuracy']:>7.3f} {r_lr['f1']:>7.3f} | "
-            f"{r_svm['accuracy']:>8.3f} {r_svm['f1']:>7.3f}"
+            f"{r_rf['accuracy']:>7.3f} {r_rf['f1']:>7.3f} {r_rf['roc_auc']:>7.3f} | "
+            f"{r_lr['accuracy']:>7.3f} {r_lr['f1']:>7.3f} {r_lr['roc_auc']:>7.3f} | "
+            f"{r_svm['accuracy']:>8.3f} {r_svm['f1']:>7.3f} {r_svm['roc_auc']:>8.3f}"
         )
 
     plot_results(levels, rf_results, lr_results, svm_results, save_path=args.save)
