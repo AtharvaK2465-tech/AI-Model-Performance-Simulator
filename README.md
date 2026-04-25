@@ -1,14 +1,22 @@
 # 🤖 AI Model Performance Simulator
 
-Simulate how ML classification models degrade under real-world data distortions — noise, drift, imbalance, missing values, label noise, outliers, and more.
+Simulate how ML classification models degrade under real-world data distortions — noise, drift, imbalance, missing values, label noise, outliers, feature corruption, and more.
+
+## 📊 Main Simulation Chart
 
 ![results](results.png)
 
+## 🔬 Per-Distortion Analysis Chart
+
 ![per_distortion](per_distortion.png)
+
+---
 
 ## What it does
 
-Trains **Random Forest**, **Logistic Regression**, and **SVM** on clean data, then evaluates all three across increasing distortion levels. Tracks **6 metrics** at each level and produces a **2×3 comparison chart**.
+Trains up to **6 ML models** on clean data, then evaluates them across increasing distortion levels. Tracks **6 metrics** at each level, produces a **2×3 comparison chart**, and runs a **per-distortion analysis** showing which distortion type hurts each model the most. Every run is saved locally with charts and metrics.
+
+---
 
 ## Models
 
@@ -16,7 +24,12 @@ Trains **Random Forest**, **Logistic Regression**, and **SVM** on clean data, th
 |---|---|
 | Random Forest | 100 estimators |
 | Logistic Regression | max_iter=2000 |
-| SVM | RBF kernel |
+| SVM | RBF kernel, probability=True |
+| Decision Tree | Default sklearn |
+| KNN | 5 neighbors |
+| Gradient Boosting | 100 estimators |
+
+---
 
 ## Metrics Tracked
 
@@ -28,6 +41,8 @@ Trains **Random Forest**, **Logistic Regression**, and **SVM** on clean data, th
 | F1 Score (macro) | Harmonic mean of precision & recall |
 | ROC-AUC Score | Discrimination ability across classes |
 | Model Confidence | Mean max prediction probability |
+
+---
 
 ## Distortion Types
 
@@ -42,10 +57,19 @@ Trains **Random Forest**, **Logistic Regression**, and **SVM** on clean data, th
 | Outlier Injection | Extreme values (±5 std devs) in random samples |
 | Feature Corruption | Random feature columns zeroed out (sensor failure) |
 
+---
+
 ## Dataset Support
 
 - **Built-in:** Iris, Wine, Breast Cancer (sklearn)
-- **Custom CSV:** Upload any CSV — auto-detects numeric features, auto-encodes categorical columns, drops ID-like and high-cardinality columns
+- **Custom CSV:** Upload any CSV file
+  - Auto-detects numeric features
+  - Auto-encodes categorical columns (up to 20 unique values)
+  - Drops ID-like and high-cardinality columns
+  - Handles missing values, duplicates, and class imbalance warnings
+  - Detects and warns about regression targets
+
+---
 
 ## Simulation Controls
 
@@ -56,20 +80,48 @@ Trains **Random Forest**, **Logistic Regression**, and **SVM** on clean data, th
 | Test Set Size | Fraction of data held out for testing |
 | Feature Scaling | StandardScaler on/off |
 | Random Seed | Reproducible train/test splits |
+| Model Selection | Choose which models to compare |
 | Distortion Type Checkboxes | Choose which distortions to apply |
+
+---
+
+## Run History
+
+Every simulation run is automatically saved to `results/run_NNN/`:
+
+````
+results/
+├── run_001/
+│   ├── run_001.json         # Settings, metrics, timestamps
+│   ├── results.png          # Main 2×3 simulation chart
+│   └── per_distortion.png   # Per-distortion bar chart
+├── run_002/
+│   └── ...
+````
+
+The Run History section in the Streamlit dashboard shows all past runs with their charts and metrics tables.
+
+---
 
 ## Setup
 
-```bash
+````bash
 git clone https://github.com/n-a-n-d-a-n/AI-Model-Performance-Simulator.git
 cd AI-Model-Performance-Simulator
 pip install -r requirements.txt
-```
+````
+
+---
 
 ## Usage
 
+**Web Dashboard (Streamlit):**
+````bash
+streamlit run app.py
+````
+
 **CLI (terminal):**
-```bash
+````bash
 # Default (Iris dataset)
 python main.py
 
@@ -85,39 +137,45 @@ python main.py --csv path/to/your/data.csv
 
 # Save plot
 python main.py --save output/results.png
-```
+````
 
-**Web Dashboard (Streamlit):**
-```bash
-streamlit run app.py
-```
+---
 
 ## Run Tests
 
-```bash
+````bash
 pytest test_simulator.py -v
-```
+````
+
+---
 
 ## Project Structure
 
-```
-├── app.py                # Streamlit web dashboard
-├── main.py               # CLI entry point
-├── model.py              # Model training + dataset loading
-├── distortions.py        # All 8 distortion functions
-├── evaluation.py         # 6 metrics including ROC-AUC + confidence
-├── visualization.py      # 2×3 metrics chart
-├── test_simulator.py     # Unit tests (7/7 passing)
+````
+├── app.py                  # Streamlit web dashboard
+├── main.py                 # CLI entry point
+├── model.py                # 6 models + dataset loading
+├── distortions.py          # 8 distortion functions
+├── distortion_analysis.py  # Per-distortion analysis engine
+├── evaluation.py           # 6 metrics including ROC-AUC + confidence
+├── visualization.py        # 2×3 metrics chart
+├── run_logger.py           # Run history saving + loading
+├── test_simulator.py       # Unit tests (7/7 passing)
+├── results/                # Saved run folders (local only)
+├── results.png             # Latest main simulation chart
+├── per_distortion.png      # Latest per-distortion chart
 ├── requirements.txt
 └── .gitignore
-```
+````
+
+---
 
 ## Requirements
 
-```
+````
 numpy
 pandas
 scikit-learn
 matplotlib
 streamlit
-```
+````

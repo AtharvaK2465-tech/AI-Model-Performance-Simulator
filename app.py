@@ -11,6 +11,7 @@ from model import load_dataset, train_models, ALL_MODELS, MODEL_COLORS, MODEL_MA
 from distortions import apply_distortion
 from evaluation import evaluate
 from run_logger import save_run, load_all_runs
+from distortion_analysis import run_per_distortion_analysis, DISTORTION_NAMES
 
 # ─── Page Config ───────────────────────────────────────────────────────────────
 st.set_page_config(page_title="AI Model Performance Simulator", layout="wide")
@@ -208,9 +209,7 @@ st.sidebar.markdown("Select models to compare:")
 model_selections = {}
 for model_name in ALL_MODELS.keys():
     default = model_name in ["Random Forest", "Logistic Regression", "SVM"]
-    model_selections[model_name] = st.sidebar.checkbox(
-        model_name, value=default
-    )
+    model_selections[model_name] = st.sidebar.checkbox(model_name, value=default)
 
 selected_models = [k for k, v in model_selections.items() if v]
 
@@ -315,7 +314,6 @@ if st.sidebar.button("▶ Run Simulation"):
         "f1": 0, "roc_auc": 0, "confidence": 0
     }
 
-    # results dict: {model_name: [result_per_level]}
     all_results = {name: [] for name in selected_models}
     progress = st.progress(0)
     status   = st.empty()
@@ -352,7 +350,7 @@ if st.sidebar.button("▶ Run Simulation"):
 
     status.text("✅ Simulation complete!")
 
-    # ─── Plot ──────────────────────────────────────────────────────────────────
+    # ─── Plot 2×3 grid ─────────────────────────────────────────────────────────
     METRICS = ["accuracy", "precision", "recall", "f1", "roc_auc", "confidence"]
     TITLES  = [
         "Accuracy", "Precision (macro)", "Recall (macro)",
@@ -406,21 +404,91 @@ if st.sidebar.button("▶ Run Simulation"):
     for i, level in enumerate(distortion_levels):
         row = {"Level": round(level, 3)}
         for name in selected_models:
-            short = "".join([w[0] for w in name.split()])  # RF, LR, SVM, DT, KNN, GB
-            row[f"{short} Acc"] = round(all_results[name][i]["accuracy"],   3)
-            row[f"{short} F1"]  = round(all_results[name][i]["f1"],         3)
-            row[f"{short} AUC"] = round(all_results[name][i]["roc_auc"],    3)
-            row[f"{short} Conf"]= round(all_results[name][i]["confidence"], 3)
+            short = "".join([w[0] for w in name.split()])
+            row[f"{short} Acc"]  = round(all_results[name][i]["accuracy"],   3)
+            row[f"{short} F1"]   = round(all_results[name][i]["f1"],         3)
+            row[f"{short} AUC"]  = round(all_results[name][i]["roc_auc"],    3)
+            row[f"{short} Conf"] = round(all_results[name][i]["confidence"], 3)
         rows.append(row)
 
     results_df = pd.DataFrame(rows)
     st.dataframe(results_df, use_container_width=True)
 
-    # ─── Download ──────────────────────────────────────────────────────────────
     st.download_button(
         label="⬇️ Download Results as CSV",
         data=results_df.to_csv(index=False),
         file_name="simulation_results.csv",
+        mime="text/csv"
+    )
+
+    # ─── Per-Distortion Analysis ───────────────────────────────────────────────
+    st.markdown("---")
+    st.subheader("🔬 Per-Distortion Analysis")
+    st.markdown(
+        f"Each distortion type applied **individually** at level `{max_level}` "
+        "— shows which one hurts each model the most."
+    )
+
+    with st.spinner("Running per-distortion analysis..."):
+        analysis_results = run_per_distortion_analysis(
+            trained_models, X_test, y_test, level=max_level
+        )
+
+    metric_choice = st.selectbox(
+        "Metric to visualize", ["accuracy", "f1", "roc_auc"], index=0,
+        key="metric_choice"
+    )
+
+    fig_a, ax_a = plt.subplots(figsize=(14, 6))
+    x      = np.arange(len(DISTORTION_NAMES))
+    width  = 0.8 / len(selected_models)
+    offset = -(len(selected_models) - 1) / 2
+
+    for i, name in enumerate(selected_models):
+        vals = [
+            analysis_results[d][name].get(metric_choice, 0)
+            for d in DISTORTION_NAMES
+        ]
+        ax_a.bar(
+            x + (offset + i) * width, vals,
+            width=width,
+            label=name,
+            color=MODEL_COLORS.get(name, "gray"),
+            alpha=0.85
+        )
+
+    ax_a.set_xticks(x)
+    ax_a.set_xticklabels(DISTORTION_NAMES, rotation=25, ha='right', fontsize=9)
+    ax_a.set_ylabel(metric_choice.replace("_", " ").capitalize())
+    ax_a.set_title(
+        f"Model {metric_choice.capitalize()} Under Each Distortion Type "
+        f"(level={max_level})\nDataset: {ds_name}",
+        fontsize=12, fontweight="bold"
+    )
+    ax_a.set_ylim(0, 1.05)
+    ax_a.legend(fontsize=8)
+    ax_a.grid(axis='y', linestyle='--', alpha=0.6)
+    plt.tight_layout()
+    st.pyplot(fig_a)
+
+    # Analysis table
+    st.subheader("📊 Per-Distortion Results Table")
+    rows_a = []
+    for d_name in DISTORTION_NAMES:
+        row = {"Distortion": d_name}
+        for name in selected_models:
+            short = "".join([w[0] for w in name.split()])
+            row[f"{short} Acc"] = round(analysis_results[d_name][name].get("accuracy", 0), 3)
+            row[f"{short} F1"]  = round(analysis_results[d_name][name].get("f1",       0), 3)
+            row[f"{short} AUC"] = round(analysis_results[d_name][name].get("roc_auc",  0), 3)
+        rows_a.append(row)
+    analysis_df = pd.DataFrame(rows_a)
+    st.dataframe(analysis_df, use_container_width=True)
+
+    st.download_button(
+        label="⬇️ Download Analysis as CSV",
+        data=analysis_df.to_csv(index=False),
+        file_name="per_distortion_analysis.csv",
         mime="text/csv"
     )
 
@@ -444,14 +512,14 @@ if st.sidebar.button("▶ Run Simulation"):
         "feature_corruption": use_corruption,
     }
 
-    # Convert all_results for JSON serialization
     rf_res  = all_results.get("Random Forest",       [empty_result] * len(distortion_levels))
     lr_res  = all_results.get("Logistic Regression", [empty_result] * len(distortion_levels))
     svm_res = all_results.get("SVM",                 [empty_result] * len(distortion_levels))
 
     run_id, run_dir = save_run(
         ds_name, settings, distortions_used,
-        distortion_levels, rf_res, lr_res, svm_res, fig
+        distortion_levels, rf_res, lr_res, svm_res,
+        fig, fig_analysis=fig_a, analysis_df=analysis_df
     )
     st.info(f"💾 Run #{run_id:03d} saved to `{run_dir}/`")
 
@@ -482,9 +550,14 @@ else:
             )
 
             if run.get("_png_path") and os.path.exists(run["_png_path"]):
+                st.markdown("**Main Simulation Chart:**")
                 st.image(run["_png_path"], use_column_width=True)
             else:
-                st.warning("Chart image not found for this run.")
+                st.warning("Main chart not found for this run.")
+
+            if run.get("_analysis_png_path") and os.path.exists(run["_analysis_png_path"]):
+                st.markdown("**Per-Distortion Analysis Chart:**")
+                st.image(run["_analysis_png_path"], use_column_width=True)
 
             rows = []
             levels_list = run["levels"]
