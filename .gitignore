@@ -16,3 +16,4 @@ Thumbs.db
 # Output
 *.jpg
 !results.png
+!per_distortion.png

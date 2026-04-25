@@ -18,7 +18,11 @@ def _next_run_id():
     return len(existing) + 1
 
 
-def save_run(ds_name, settings, distortions_used, levels, rf_results, lr_results, svm_results, fig):
+def save_run(
+    ds_name, settings, distortions_used,
+    levels, rf_results, lr_results, svm_results,
+    fig, fig_analysis=None, analysis_df=None
+):
     """Save a simulation run to results/run_NNN/ folder."""
     run_id  = _next_run_id()
     run_dir = os.path.join(RESULTS_DIR, f"run_{run_id:03d}")
@@ -42,12 +46,21 @@ def save_run(ds_name, settings, distortions_used, levels, rf_results, lr_results
     with open(json_path, "w") as f:
         json.dump(payload, f, indent=2)
 
-    # Save chart for this run
+    # Save main chart
     png_path = os.path.join(run_dir, "results.png")
     fig.savefig(png_path, dpi=150, bbox_inches="tight")
-
-    # Also overwrite root results.png for README
     fig.savefig("results.png", dpi=150, bbox_inches="tight")
+
+    # Save per-distortion chart
+    if fig_analysis is not None:
+        analysis_png = os.path.join(run_dir, "per_distortion.png")
+        fig_analysis.savefig(analysis_png, dpi=150, bbox_inches="tight")
+        fig_analysis.savefig("per_distortion.png", dpi=150, bbox_inches="tight")
+
+    # Save per-distortion CSV if provided
+    if analysis_df is not None:
+        analysis_csv = os.path.join(run_dir, "per_distortion.csv")
+        analysis_df.to_csv(analysis_csv, index=False)
 
     return run_id, run_dir
 
@@ -62,12 +75,16 @@ def load_all_runs():
             continue
         json_file = os.path.join(run_dir, f"{d}.json")
         png_file  = os.path.join(run_dir, "results.png")
+        analysis_png = os.path.join(run_dir, "per_distortion.png")
+        analysis_csv = os.path.join(run_dir, "per_distortion.csv")
         if not os.path.exists(json_file):
             continue
         try:
             with open(json_file) as f:
                 data = json.load(f)
-            data["_png_path"] = png_file if os.path.exists(png_file) else None
+            data["_png_path"]          = png_file      if os.path.exists(png_file)      else None
+            data["_analysis_png_path"] = analysis_png  if os.path.exists(analysis_png)  else None
+            data["_analysis_csv_path"] = analysis_csv  if os.path.exists(analysis_csv)  else None
             runs.append(data)
         except Exception:
             pass

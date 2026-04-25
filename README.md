@@ -4,6 +4,8 @@ Simulate how ML classification models degrade under real-world data distortions 
 
 ![results](results.png)
 
+![per_distortion](per_distortion.png)
+
 ## What it does
 
 Trains **Random Forest**, **Logistic Regression**, and **SVM** on clean data, then evaluates all three across increasing distortion levels. Tracks **6 metrics** at each level and produces a **2×3 comparison chart**.
