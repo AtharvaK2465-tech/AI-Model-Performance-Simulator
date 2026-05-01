@@ -273,6 +273,7 @@ pandas
 scikit-learn
 matplotlib
 streamlit
+xgboost
 ```
 
 ---
