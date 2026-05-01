@@ -12,6 +12,11 @@ from distortions import apply_distortion
 from evaluation import evaluate
 from run_logger import save_run, load_all_runs
 from distortion_analysis import run_per_distortion_analysis, DISTORTION_NAMES
+from reliability_analysis import (
+    compute_reliability_horizons,
+    plot_reliability_windows,
+    get_reliability_verdict,
+)
 
 # ─── Page Config ───────────────────────────────────────────────────────────────
 st.set_page_config(page_title="AI Model Performance Simulator", layout="wide")
@@ -40,7 +45,7 @@ if dataset_source == "Built-in Dataset":
     dataset_name = st.sidebar.selectbox("Dataset", ["iris", "wine", "breast_cancer"])
     try:
         X, y, ds_name = load_dataset(name=dataset_name)
-        st.sidebar.success(f"✅ Loaded: {dataset_name}")
+        st.sidebar.success(f"Loaded: {dataset_name}")
         st.sidebar.markdown(f"**Samples:** {len(y)}")
         st.sidebar.markdown(f"**Features:** {X.shape[1]}")
         st.sidebar.markdown(f"**Classes:** {len(np.unique(y))}")
@@ -58,13 +63,13 @@ else:
             df.dropna(axis=0, how='all', inplace=True)
 
             if df.empty:
-                st.error("❌ Uploaded CSV is empty after cleaning.")
+                st.error("Uploaded CSV is empty after cleaning.")
                 st.stop()
             if len(df) < 20:
-                st.error(f"❌ Dataset has only {len(df)} rows. Need at least 20 samples.")
+                st.error(f"Dataset has only {len(df)} rows. Need at least 20 samples.")
                 st.stop()
             if len(df.columns) < 2:
-                st.error("❌ Dataset needs at least 2 columns (1 feature + 1 target).")
+                st.error("Dataset needs at least 2 columns (1 feature + 1 target).")
                 st.stop()
 
             st.subheader("📄 Uploaded Data Preview")
@@ -78,7 +83,7 @@ else:
 
             if is_regression_target(df[target_col].values):
                 st.warning(
-                    f"⚠️ The column **'{target_col}'** looks like a continuous/regression target "
+                    f"The column **'{target_col}'** looks like a continuous/regression target "
                     f"({df[target_col].nunique()} unique values). "
                     "This simulator is for **classification only**. "
                     "Please select a categorical target column."
@@ -95,7 +100,7 @@ else:
             ]
             if id_like_cols:
                 numeric_cols = [c for c in numeric_cols if c not in id_like_cols]
-                st.sidebar.warning(f"⚠️ Dropped ID-like columns: {id_like_cols}")
+                st.sidebar.warning(f"Dropped ID-like columns: {id_like_cols}")
 
             encoded_cols = []
             if non_numeric_cols:
@@ -108,33 +113,33 @@ else:
                         encoded_cols.append(col)
                 dropped_cols = [c for c in non_numeric_cols if c not in encoded_cols]
                 if encoded_cols:
-                    st.sidebar.info(f"ℹ️ Auto-encoded: {encoded_cols}")
+                    st.sidebar.info(f"Auto-encoded: {encoded_cols}")
                 if dropped_cols:
-                    st.sidebar.warning(f"⚠️ Dropped high-cardinality columns: {dropped_cols}")
+                    st.sidebar.warning(f"Dropped high-cardinality columns: {dropped_cols}")
 
             all_feature_cols = numeric_cols + encoded_cols
 
             if len(all_feature_cols) == 0:
-                st.error("❌ No usable feature columns found.")
+                st.error("No usable feature columns found.")
                 st.stop()
             if len(all_feature_cols) == 1:
-                st.warning("⚠️ Only 1 feature column found. Results may be unreliable.")
+                st.warning("Only 1 feature column found. Results may be unreliable.")
 
             feature_df   = feature_df[all_feature_cols].copy()
             before_dedup = len(feature_df)
             feature_df   = feature_df.drop_duplicates()
             dupes        = before_dedup - len(feature_df)
             if dupes > 0:
-                st.sidebar.info(f"ℹ️ Removed {dupes} duplicate rows.")
+                st.sidebar.info(f"Removed {dupes} duplicate rows.")
 
             before_nan  = len(feature_df)
             feature_df.dropna(inplace=True)
             dropped_nan = before_nan - len(feature_df)
             if dropped_nan > 0:
-                st.sidebar.info(f"ℹ️ Dropped {dropped_nan} rows with missing values.")
+                st.sidebar.info(f"Dropped {dropped_nan} rows with missing values.")
 
             if len(feature_df) < 20:
-                st.error(f"❌ Only {len(feature_df)} usable rows remain. Need at least 20.")
+                st.error(f"Only {len(feature_df)} usable rows remain. Need at least 20.")
                 st.stop()
 
             X = feature_df.values.astype(float)
@@ -147,7 +152,7 @@ else:
             target_nan_mask = pd.isnull(y_raw)
             if target_nan_mask.any():
                 count = target_nan_mask.sum()
-                st.sidebar.info(f"ℹ️ Dropped {count} rows with missing target values.")
+                st.sidebar.info(f"Dropped {count} rows with missing target values.")
                 X     = X[~target_nan_mask]
                 y_raw = y_raw[~target_nan_mask]
 
@@ -155,20 +160,20 @@ else:
             try:
                 y = le.fit_transform(y_raw.astype(str))
             except Exception as enc_err:
-                st.error(f"❌ Could not encode target column: {enc_err}")
+                st.error(f"Could not encode target column: {enc_err}")
                 st.stop()
 
             n_classes = len(np.unique(y))
             n_samples = len(y)
 
             if n_samples < 20:
-                st.error(f"❌ Too few samples ({n_samples}). Need at least 20.")
+                st.error(f"Too few samples ({n_samples}). Need at least 20.")
                 st.stop()
             if n_classes < 2:
-                st.error(f"❌ Target column has only 1 class. Need at least 2.")
+                st.error(f"Target column has only 1 class. Need at least 2.")
                 st.stop()
             if n_classes > 50:
-                st.error(f"❌ Target column has {n_classes} classes — looks like regression/ID.")
+                st.error(f"Target column has {n_classes} classes — looks like regression/ID.")
                 st.stop()
 
             class_counts    = Counter(y)
@@ -177,33 +182,33 @@ else:
             imbalance_ratio = max_class_count / min_class_count
 
             if min_class_count < 2:
-                st.error(f"❌ At least one class has only {min_class_count} sample(s).")
+                st.error(f"At least one class has only {min_class_count} sample(s).")
                 st.stop()
             if imbalance_ratio > 10:
-                st.warning(f"⚠️ Dataset is highly imbalanced (ratio {imbalance_ratio:.1f}x).")
+                st.warning(f"Dataset is highly imbalanced (ratio {imbalance_ratio:.1f}x).")
 
             ds_name = uploaded_file.name
-            st.sidebar.success(f"✅ CSV loaded: {ds_name}")
+            st.sidebar.success(f"CSV loaded: {ds_name}")
             st.sidebar.markdown(f"**Samples:** {n_samples}")
             st.sidebar.markdown(
-                f"**Classes:** {n_classes} → {list(le.classes_[:5])}"
+                f"**Classes:** {n_classes} -> {list(le.classes_[:5])}"
                 + ("..." if n_classes > 5 else "")
             )
 
         except pd.errors.EmptyDataError:
-            st.error("❌ The uploaded file is empty.")
+            st.error("The uploaded file is empty.")
             st.stop()
         except pd.errors.ParserError:
-            st.error("❌ Could not parse CSV.")
+            st.error("Could not parse CSV.")
             st.stop()
         except Exception as e:
-            st.error(f"❌ Unexpected error reading CSV: {e}")
+            st.error(f"Unexpected error reading CSV: {e}")
             st.stop()
     else:
-        st.info("👈 Upload a CSV file from the sidebar, or switch to a built-in dataset.")
+        st.info("Upload a CSV file from the sidebar, or switch to a built-in dataset.")
 
 # ─── Model Selection ───────────────────────────────────────────────────────────
-st.sidebar.header("🤖 Model Selection")
+st.sidebar.header("Model Selection")
 st.sidebar.markdown("Select models to compare:")
 
 model_selections = {}
@@ -214,12 +219,12 @@ for model_name in ALL_MODELS.keys():
 selected_models = [k for k, v in model_selections.items() if v]
 
 if len(selected_models) == 0:
-    st.sidebar.warning("⚠️ No models selected. Please select at least one.")
+    st.sidebar.warning("No models selected. Please select at least one.")
 elif len(selected_models) == 1:
-    st.sidebar.info("ℹ️ Select at least 2 models for a meaningful comparison.")
+    st.sidebar.info("Select at least 2 models for a meaningful comparison.")
 
 # ─── Simulation Settings ───────────────────────────────────────────────────────
-st.sidebar.header("🎛️ Simulation Settings")
+st.sidebar.header("Simulation Settings")
 
 max_level = st.sidebar.slider(
     "Max Distortion Level", 0.1, 1.0, 0.4, step=0.1,
@@ -243,7 +248,7 @@ random_seed = st.sidebar.number_input(
 )
 
 # ─── Distortion Type Selection ─────────────────────────────────────────────────
-st.sidebar.header("🧪 Distortion Types")
+st.sidebar.header("Distortion Types")
 st.sidebar.markdown("Select which distortions to apply:")
 
 use_noise       = st.sidebar.checkbox("Gaussian Noise",     value=True,
@@ -265,17 +270,17 @@ use_corruption  = st.sidebar.checkbox("Feature Corruption", value=False,
 
 if not any([use_noise, use_drift, use_dist_shift, use_imbalance,
             use_missing, use_label_noise, use_outliers, use_corruption]):
-    st.sidebar.warning("⚠️ No distortions selected. Results will be flat lines.")
+    st.sidebar.warning("No distortions selected. Results will be flat lines.")
 
 # ─── Run Simulation ────────────────────────────────────────────────────────────
-if st.sidebar.button("▶ Run Simulation"):
+if st.sidebar.button("Run Simulation"):
 
     if X is None or y is None:
-        st.warning("⚠️ Please select or upload a valid dataset first.")
+        st.warning("Please select or upload a valid dataset first.")
         st.stop()
 
     if len(selected_models) == 0:
-        st.warning("⚠️ Please select at least one model.")
+        st.warning("Please select at least one model.")
         st.stop()
 
     distortion_levels = list(np.linspace(0, max_level, num_levels))
@@ -295,14 +300,14 @@ if st.sidebar.button("▶ Run Simulation"):
             )
             trained_models = train_models(X_train, y_train, selected_models)
         except ValueError as ve:
-            st.error(f"❌ Train/test split failed: {ve}")
+            st.error(f"Train/test split failed: {ve}")
             st.stop()
         except Exception as e:
-            st.error(f"❌ Model training failed: {e}")
+            st.error(f"Model training failed: {e}")
             st.stop()
 
     st.success(
-        f"✅ Models trained on **{ds_name}** | "
+        f"Models trained on **{ds_name}** | "
         f"Samples: {len(y)} | Features: {X.shape[1]} | "
         f"Classes: {len(np.unique(y))} | "
         f"Train: {len(X_train)} | Test: {len(X_test)} | "
@@ -334,7 +339,7 @@ if st.sidebar.button("▶ Run Simulation"):
             )
 
             if len(X_dist) == 0 or len(np.unique(y_dist)) < 2:
-                st.warning(f"⚠️ Level {round(level, 2)}: Not enough class diversity — skipping.")
+                st.warning(f"Level {round(level, 2)}: Not enough class diversity — skipping.")
                 for name in selected_models:
                     all_results[name].append(empty_result.copy())
             else:
@@ -342,15 +347,15 @@ if st.sidebar.button("▶ Run Simulation"):
                     all_results[name].append(evaluate(model, X_dist, y_dist))
 
         except Exception as e:
-            st.warning(f"⚠️ Error at level {round(level, 2)}: {e} — skipping.")
+            st.warning(f"Error at level {round(level, 2)}: {e} — skipping.")
             for name in selected_models:
                 all_results[name].append(empty_result.copy())
 
         progress.progress((i + 1) / len(distortion_levels))
 
-    status.text("✅ Simulation complete!")
+    status.text("Simulation complete!")
 
-    # ─── Plot 2×3 grid ─────────────────────────────────────────────────────────
+    # ─── Plot 2x3 grid ─────────────────────────────────────────────────────────
     METRICS = ["accuracy", "precision", "recall", "f1", "roc_auc", "confidence"]
     TITLES  = [
         "Accuracy", "Precision (macro)", "Recall (macro)",
@@ -383,7 +388,7 @@ if st.sidebar.button("▶ Run Simulation"):
     st.pyplot(fig)
 
     # ─── Dataset & Run Info ────────────────────────────────────────────────────
-    with st.expander("📋 Dataset & Run Info"):
+    with st.expander("Dataset & Run Info"):
         col1, col2, col3, col4 = st.columns(4)
         col1.metric("Total Samples",   len(y))
         col2.metric("Features Used",   X.shape[1])
@@ -399,7 +404,7 @@ if st.sidebar.button("▶ Run Simulation"):
         st.bar_chart(class_dist)
 
     # ─── Results Table ─────────────────────────────────────────────────────────
-    st.subheader("📊 Results Table")
+    st.subheader("Results Table")
     rows = []
     for i, level in enumerate(distortion_levels):
         row = {"Level": round(level, 3)}
@@ -415,7 +420,7 @@ if st.sidebar.button("▶ Run Simulation"):
     st.dataframe(results_df, use_container_width=True)
 
     st.download_button(
-        label="⬇️ Download Results as CSV",
+        label="Download Results as CSV",
         data=results_df.to_csv(index=False),
         file_name="simulation_results.csv",
         mime="text/csv"
@@ -423,7 +428,7 @@ if st.sidebar.button("▶ Run Simulation"):
 
     # ─── Per-Distortion Analysis ───────────────────────────────────────────────
     st.markdown("---")
-    st.subheader("🔬 Per-Distortion Analysis")
+    st.subheader("Per-Distortion Analysis")
     st.markdown(
         f"Each distortion type applied **individually** at level `{max_level}` "
         "— shows which one hurts each model the most."
@@ -472,7 +477,7 @@ if st.sidebar.button("▶ Run Simulation"):
     st.pyplot(fig_a)
 
     # Analysis table
-    st.subheader("📊 Per-Distortion Results Table")
+    st.subheader("Per-Distortion Results Table")
     rows_a = []
     for d_name in DISTORTION_NAMES:
         row = {"Distortion": d_name}
@@ -486,10 +491,102 @@ if st.sidebar.button("▶ Run Simulation"):
     st.dataframe(analysis_df, use_container_width=True)
 
     st.download_button(
-        label="⬇️ Download Analysis as CSV",
+        label="Download Analysis as CSV",
         data=analysis_df.to_csv(index=False),
         file_name="per_distortion_analysis.csv",
         mime="text/csv"
+    )
+
+    # ─── Reliability Analysis ──────────────────────────────────────────────────
+    st.markdown("---")
+    st.subheader("Model Reliability Horizon")
+
+    with st.expander("What is this?", expanded=False):
+        st.markdown(
+            "Defines a **reliability threshold** (e.g. accuracy >= 0.75) and finds the exact "
+            "distortion level where each model crosses it — the **reliability horizon**. "
+            "Models that never cross the threshold are marked *Always Reliable*. "
+            "**Green zones** are safe operating ranges; **red zones** are where the model "
+            "should not be trusted."
+        )
+
+    col_thresh, col_metric_rel = st.columns(2)
+    reliability_threshold = col_thresh.slider(
+        "Reliability threshold",
+        min_value=0.40, max_value=0.95,
+        value=0.75, step=0.05,
+        key="rel_threshold",
+        help="Minimum acceptable performance — model is 'reliable' above this line."
+    )
+    reliability_metric = col_metric_rel.selectbox(
+        "Metric",
+        ["accuracy", "f1", "precision", "recall"],
+        index=0,
+        key="rel_metric"
+    )
+
+    # Build long-form DataFrame for reliability functions
+    rel_rows = []
+    for name in selected_models:
+        for i, level in enumerate(distortion_levels):
+            rel_rows.append({
+                "model_name":       name,
+                "distortion_level": level,
+                "accuracy":         all_results[name][i]["accuracy"],
+                "precision":        all_results[name][i]["precision"],
+                "recall":           all_results[name][i]["recall"],
+                "f1":               all_results[name][i]["f1"],
+                "roc_auc":          all_results[name][i]["roc_auc"],
+                "confidence":       all_results[name][i]["confidence"],
+            })
+    rel_df = pd.DataFrame(rel_rows)
+
+    horizons_df = compute_reliability_horizons(
+        rel_df,
+        metric=reliability_metric,
+        threshold=reliability_threshold,
+    )
+
+    with st.spinner("Plotting reliability windows..."):
+        rel_fig = plot_reliability_windows(
+            rel_df, horizons_df, MODEL_COLORS,
+            metric=reliability_metric,
+            threshold=reliability_threshold,
+        )
+    st.pyplot(rel_fig, use_container_width=True)
+    plt.close(rel_fig)
+
+    # Horizon summary table
+    st.markdown("**Reliability Horizon Table**")
+
+    def _colour_reliable_range(val):
+        if not isinstance(val, (int, float)):
+            return ""
+        if val >= 90:
+            return "background-color: #d4edda; color: #155724"
+        elif val >= 60:
+            return "background-color: #fff3cd; color: #856404"
+        else:
+            return "background-color: #f8d7da; color: #721c24"
+
+    styled_horizons = (
+        horizons_df.style
+        .map(_colour_reliable_range, subset=["Reliable Range (%)"])
+        .format({"Reliable Range (%)": "{:.1f}%", "Horizon Level": "{:.4f}"})
+    )
+    st.dataframe(styled_horizons, use_container_width=True)
+
+    # Verdict markdown
+    verdict_md = get_reliability_verdict(horizons_df, max_level)
+    st.markdown(verdict_md)
+
+    # Download
+    rel_csv = horizons_df.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        "Download Reliability Report CSV",
+        rel_csv,
+        file_name="reliability_horizons.csv",
+        mime="text/csv",
     )
 
     # ─── Save Run ──────────────────────────────────────────────────────────────
@@ -519,13 +616,20 @@ if st.sidebar.button("▶ Run Simulation"):
     run_id, run_dir = save_run(
         ds_name, settings, distortions_used,
         distortion_levels, rf_res, lr_res, svm_res,
-        fig, fig_analysis=fig_a, analysis_df=analysis_df
+        fig,
+        fig_analysis=fig_a,
+        analysis_df=analysis_df,
+        # ── reliability data ──────────────────────────────────────────────────
+        fig_reliability=rel_fig,
+        horizons_df=horizons_df,
+        reliability_threshold=reliability_threshold,
+        reliability_metric=reliability_metric,
     )
-    st.info(f"💾 Run #{run_id:03d} saved to `{run_dir}/`")
+    st.info(f"Run #{run_id:03d} saved to `{run_dir}/`")
 
 # ─── Run History ───────────────────────────────────────────────────────────────
 st.markdown("---")
-st.subheader("🕓 Run History")
+st.subheader("Run History")
 all_runs = load_all_runs()
 if not all_runs:
     st.info("No runs saved yet. Run a simulation to see history here.")
@@ -549,16 +653,53 @@ else:
                 f"Distortions: {', '.join(distortions_on) if distortions_on else 'None'}"
             )
 
+            # ── Main simulation chart ─────────────────────────────────────────
             if run.get("_png_path") and os.path.exists(run["_png_path"]):
                 st.markdown("**Main Simulation Chart:**")
                 st.image(run["_png_path"], use_column_width=True)
             else:
                 st.warning("Main chart not found for this run.")
 
+            # ── Per-distortion chart ──────────────────────────────────────────
             if run.get("_analysis_png_path") and os.path.exists(run["_analysis_png_path"]):
                 st.markdown("**Per-Distortion Analysis Chart:**")
                 st.image(run["_analysis_png_path"], use_column_width=True)
 
+            # ── Reliability chart ─────────────────────────────────────────────
+            if run.get("_reliability_png_path") and os.path.exists(run["_reliability_png_path"]):
+                st.markdown("**Reliability Horizon Chart:**")
+                st.image(run["_reliability_png_path"], use_column_width=True)
+
+            # ── Reliability summary from stored JSON ──────────────────────────
+            rel_data = run.get("reliability", {})
+            if rel_data and rel_data.get("horizons"):
+                st.markdown(
+                    f"**Reliability Settings:** "
+                    f"Metric = `{rel_data.get('metric', 'N/A')}` | "
+                    f"Threshold = `{rel_data.get('threshold', 'N/A')}`"
+                )
+                horizons_history = pd.DataFrame(rel_data["horizons"])
+                st.markdown("**Reliability Horizon Table:**")
+                st.dataframe(horizons_history, use_container_width=True)
+
+                # Most + least reliable model from stored data
+                if not horizons_history.empty and "Reliable Range (%)" in horizons_history.columns:
+                    best_row  = horizons_history.loc[horizons_history["Reliable Range (%)"].idxmax()]
+                    worst_row = horizons_history.loc[horizons_history["Reliable Range (%)"].idxmin()]
+                    rc1, rc2  = st.columns(2)
+                    rc1.metric(
+                        "Most Reliable Model",
+                        best_row["Model"],
+                        f"{best_row['Reliable Range (%)']:.1f}% of range"
+                    )
+                    rc2.metric(
+                        "Least Reliable Model",
+                        worst_row["Model"],
+                        f"-{worst_row['Reliable Range (%)']:.1f}% of range",
+                        delta_color="inverse"
+                    )
+
+            # ── Simulation results table ──────────────────────────────────────
             rows = []
             levels_list = run["levels"]
             rf_res  = run["results"]["random_forest"]
@@ -577,4 +718,5 @@ else:
                     "SVM F1":  round(svm_res[i].get("f1",       0), 3),
                     "SVM AUC": round(svm_res[i].get("roc_auc",  0), 3),
                 })
+            st.markdown("**Simulation Results:**")
             st.dataframe(pd.DataFrame(rows), use_container_width=True)
