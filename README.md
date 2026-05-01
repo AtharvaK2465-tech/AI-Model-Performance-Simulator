@@ -10,6 +10,10 @@ Simulate how ML classification models degrade under real-world data distortions 
 
 ![per_distortion](per_distortion.png)
 
+## ⏱️ Reliability Horizon Chart
+
+![reliability](reliability.png)
+
 ---
 
 ## What it does
