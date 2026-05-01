@@ -4,6 +4,7 @@ from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.datasets import load_iris, load_wine, load_breast_cancer
+from xgboost import XGBClassifier
 import pandas as pd
 import numpy as np
 
@@ -21,6 +22,10 @@ ALL_MODELS = {
     "Decision Tree":        lambda: DecisionTreeClassifier(random_state=42),
     "KNN":                  lambda: KNeighborsClassifier(n_neighbors=5),
     "Gradient Boosting":    lambda: GradientBoostingClassifier(n_estimators=100, random_state=42),
+    "XGBoost":              XGBClassifier(n_estimators=100, random_state=42,
+                                          eval_metric='mlogloss',
+                                          use_label_encoder=False,
+                                          verbosity=0),
 }
 
 MODEL_COLORS = {
@@ -30,6 +35,7 @@ MODEL_COLORS = {
     "Decision Tree":       "orange",
     "KNN":                 "purple",
     "Gradient Boosting":   "crimson",
+    "XGBoost": "#e74c3c",
 }
 
 MODEL_MARKERS = {
@@ -39,6 +45,7 @@ MODEL_MARKERS = {
     "Decision Tree":       "D",
     "KNN":                 "P",
     "Gradient Boosting":   "*",
+    "XGBoost": "D",
 }
 
 
