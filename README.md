@@ -18,7 +18,7 @@ Simulate how ML classification models degrade under real-world data distortions 
 
 ## What it does
 
-Trains up to **6 ML models** on clean data, then evaluates them across increasing distortion levels. Tracks **6 metrics** at each level, produces a **2×3 comparison chart**, runs a **per-distortion analysis** showing which distortion type hurts each model the most, and computes a **reliability horizon** — the exact distortion level at which each model becomes untrustworthy. Every run is saved locally with charts, metrics, and reliability data.
+Trains up to **7 ML models** on clean data, then evaluates them across increasing distortion levels. Tracks **6 metrics** at each level, produces a **2×3 comparison chart**, runs a **per-distortion analysis** showing which distortion type hurts each model the most, and computes a **reliability horizon** — the exact distortion level at which each model becomes untrustworthy. Every run is saved locally with charts, metrics, and reliability data.
 
 ---
 
@@ -32,6 +32,7 @@ Trains up to **6 ML models** on clean data, then evaluates them across increasin
 | Decision Tree | Default sklearn |
 | KNN | 5 neighbors |
 | Gradient Boosting | 100 estimators |
+| XGBoost | 100 estimators, mlogloss eval metric |
 
 ---
 
@@ -243,7 +244,7 @@ All 7 tests pass.
 AI-Model-Performance-Simulator/
 ├── app.py                    # Streamlit web dashboard
 ├── main.py                   # CLI entry point
-├── model.py                  # 6 models + dataset loading + colors/markers
+├── model.py                  # 7 models + dataset loading + colors/markers
 ├── distortions.py            # 8 distortion functions
 ├── distortion_analysis.py    # Per-distortion analysis engine
 ├── evaluation.py             # 6 metrics — accuracy, precision, recall, F1, ROC-AUC, confidence
@@ -288,3 +289,6 @@ A fixed default of 0.75 fails on hard datasets where even the best model scores 
 
 **Why interpolate the horizon?**
 A coarse distortion grid (e.g. 5 levels from 0 to 0.4) means a model might be fine at 0.3 and fail at 0.4, but the true crossing point is somewhere between. Linear interpolation gives a more precise horizon level instead of just reporting the last known good level.
+
+**Why XGBoost?**
+XGBoost consistently outperforms standard Gradient Boosting on tabular data due to regularisation, parallelised tree building, and better handling of sparse features. It serves as a strong baseline for comparing ensemble robustness under distortion.
