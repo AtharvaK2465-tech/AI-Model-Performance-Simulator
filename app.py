@@ -20,11 +20,72 @@ from reliability_analysis import (
 
 # ─── Page Config ───────────────────────────────────────────────────────────────
 st.set_page_config(page_title="AI Model Performance Simulator", layout="wide")
-st.title("🤖 AI Model Performance Simulator")
+st.title("AI Model Performance Simulator")
 st.markdown("Simulate how ML models degrade under real-world data distortions.")
 
+# ─── Session State Init ────────────────────────────────────────────────────────
+defaults = {
+    "sim_done":             False,
+    "rel_df":               None,
+    "all_results":          None,
+    "distortion_levels":    None,
+    "selected_models_snap": None,
+    "ds_name_snap":         None,
+    "max_level_snap":       None,
+    "best_baseline":        0.75,
+    "suggested_threshold":  0.75,
+    "fig_main":             None,
+    "fig_analysis":         None,
+    "analysis_df":          None,
+    "analysis_results":     None,
+    "settings":             None,
+    "distortions_used":     None,
+    "rf_res":               None,
+    "lr_res":               None,
+    "svm_res":              None,
+    "run_saved":            False,
+    "last_run_id":          None,
+    "last_run_dir":         None,
+}
+for k, v in defaults.items():
+    if k not in st.session_state:
+        st.session_state[k] = v
+
+# ─── Helper: build per-distortion bar chart ────────────────────────────────────
+def _build_distortion_bar_chart(analysis_results, metric_choice,
+                                 selected_models, max_level, ds_name):
+    fig_a, ax_a = plt.subplots(figsize=(14, 6))
+    x      = np.arange(len(DISTORTION_NAMES))
+    width  = 0.8 / max(len(selected_models), 1)
+    offset = -(len(selected_models) - 1) / 2
+
+    for i, name in enumerate(selected_models):
+        vals = [
+            analysis_results[d][name].get(metric_choice, 0)
+            for d in DISTORTION_NAMES
+        ]
+        ax_a.bar(
+            x + (offset + i) * width, vals,
+            width=width, label=name,
+            color=MODEL_COLORS.get(name, "gray"), alpha=0.85
+        )
+
+    ax_a.set_xticks(x)
+    ax_a.set_xticklabels(DISTORTION_NAMES, rotation=25, ha='right', fontsize=9)
+    ax_a.set_ylabel(metric_choice.replace("_", " ").capitalize())
+    ax_a.set_title(
+        f"Model {metric_choice.capitalize()} Under Each Distortion Type "
+        f"(level={max_level})\nDataset: {ds_name}",
+        fontsize=12, fontweight="bold"
+    )
+    ax_a.set_ylim(0, 1.05)
+    ax_a.legend(fontsize=8)
+    ax_a.grid(axis='y', linestyle='--', alpha=0.6)
+    plt.tight_layout()
+    return fig_a
+
 # ─── Sidebar ───────────────────────────────────────────────────────────────────
-st.sidebar.header("⚙️ Configuration")
+st.sidebar.header("Configuration")
 dataset_source = st.sidebar.radio("Dataset Source", ["Built-in Dataset", "Upload CSV"])
 
 X, y, ds_name = None, None, None
@@ -72,9 +133,9 @@ else:
                 st.error("Dataset needs at least 2 columns (1 feature + 1 target).")
                 st.stop()
 
-            st.subheader("📄 Uploaded Data Preview")
+            st.subheader("Uploaded Data Preview")
             st.dataframe(df.head(10), use_container_width=True)
-            st.caption(f"Shape: {df.shape[0]} rows × {df.shape[1]} columns")
+            st.caption(f"Shape: {df.shape[0]} rows x {df.shape[1]} columns")
 
             columns    = df.columns.tolist()
             target_col = st.sidebar.selectbox(
@@ -275,6 +336,9 @@ if not any([use_noise, use_drift, use_dist_shift, use_imbalance,
 # ─── Run Simulation ────────────────────────────────────────────────────────────
 if st.sidebar.button("Run Simulation"):
 
+    # Reset save flag so this new run gets saved fresh
+    st.session_state.run_saved = False
+
     if X is None or y is None:
         st.warning("Please select or upload a valid dataset first.")
         st.stop()
@@ -320,8 +384,8 @@ if st.sidebar.button("Run Simulation"):
     }
 
     all_results = {name: [] for name in selected_models}
-    progress = st.progress(0)
-    status   = st.empty()
+    progress    = st.progress(0)
+    status      = st.empty()
 
     for i, level in enumerate(distortion_levels):
         status.text(f"Evaluating distortion level {round(level, 3)}...")
@@ -426,58 +490,12 @@ if st.sidebar.button("Run Simulation"):
         mime="text/csv"
     )
 
-    # ─── Per-Distortion Analysis ───────────────────────────────────────────────
-    st.markdown("---")
-    st.subheader("Per-Distortion Analysis")
-    st.markdown(
-        f"Each distortion type applied **individually** at level `{max_level}` "
-        "— shows which one hurts each model the most."
-    )
-
+    # ─── Per-Distortion Analysis (compute + store only — render outside) ───────
     with st.spinner("Running per-distortion analysis..."):
         analysis_results = run_per_distortion_analysis(
             trained_models, X_test, y_test, level=max_level
         )
 
-    metric_choice = st.selectbox(
-        "Metric to visualize", ["accuracy", "f1", "roc_auc"], index=0,
-        key="metric_choice"
-    )
-
-    fig_a, ax_a = plt.subplots(figsize=(14, 6))
-    x      = np.arange(len(DISTORTION_NAMES))
-    width  = 0.8 / len(selected_models)
-    offset = -(len(selected_models) - 1) / 2
-
-    for i, name in enumerate(selected_models):
-        vals = [
-            analysis_results[d][name].get(metric_choice, 0)
-            for d in DISTORTION_NAMES
-        ]
-        ax_a.bar(
-            x + (offset + i) * width, vals,
-            width=width,
-            label=name,
-            color=MODEL_COLORS.get(name, "gray"),
-            alpha=0.85
-        )
-
-    ax_a.set_xticks(x)
-    ax_a.set_xticklabels(DISTORTION_NAMES, rotation=25, ha='right', fontsize=9)
-    ax_a.set_ylabel(metric_choice.replace("_", " ").capitalize())
-    ax_a.set_title(
-        f"Model {metric_choice.capitalize()} Under Each Distortion Type "
-        f"(level={max_level})\nDataset: {ds_name}",
-        fontsize=12, fontweight="bold"
-    )
-    ax_a.set_ylim(0, 1.05)
-    ax_a.legend(fontsize=8)
-    ax_a.grid(axis='y', linestyle='--', alpha=0.6)
-    plt.tight_layout()
-    st.pyplot(fig_a)
-
-    # Analysis table
-    st.subheader("Per-Distortion Results Table")
     rows_a = []
     for d_name in DISTORTION_NAMES:
         row = {"Distortion": d_name}
@@ -488,44 +506,8 @@ if st.sidebar.button("Run Simulation"):
             row[f"{short} AUC"] = round(analysis_results[d_name][name].get("roc_auc",  0), 3)
         rows_a.append(row)
     analysis_df = pd.DataFrame(rows_a)
-    st.dataframe(analysis_df, use_container_width=True)
 
-    st.download_button(
-        label="Download Analysis as CSV",
-        data=analysis_df.to_csv(index=False),
-        file_name="per_distortion_analysis.csv",
-        mime="text/csv"
-    )
-
-    # ─── Reliability Analysis ──────────────────────────────────────────────────
-    st.markdown("---")
-    st.subheader("Model Reliability Horizon")
-
-    with st.expander("What is this?", expanded=False):
-        st.markdown(
-            "Defines a **reliability threshold** (e.g. accuracy >= 0.75) and finds the exact "
-            "distortion level where each model crosses it — the **reliability horizon**. "
-            "Models that never cross the threshold are marked *Always Reliable*. "
-            "**Green zones** are safe operating ranges; **red zones** are where the model "
-            "should not be trusted."
-        )
-
-    col_thresh, col_metric_rel = st.columns(2)
-    reliability_threshold = col_thresh.slider(
-        "Reliability threshold",
-        min_value=0.40, max_value=0.95,
-        value=0.75, step=0.05,
-        key="rel_threshold",
-        help="Minimum acceptable performance — model is 'reliable' above this line."
-    )
-    reliability_metric = col_metric_rel.selectbox(
-        "Metric",
-        ["accuracy", "f1", "precision", "recall"],
-        index=0,
-        key="rel_metric"
-    )
-
-    # Build long-form DataFrame for reliability functions
+    # ─── Build long-form rel_df ────────────────────────────────────────────────
     rel_rows = []
     for name in selected_models:
         for i, level in enumerate(distortion_levels):
@@ -541,22 +523,160 @@ if st.sidebar.button("Run Simulation"):
             })
     rel_df = pd.DataFrame(rel_rows)
 
+    # Auto-suggest threshold = 80% of best baseline, snapped to nearest 0.05
+    baseline_accs   = [all_results[name][0]["accuracy"] for name in selected_models]
+    best_baseline   = max(baseline_accs) if baseline_accs else 0.75
+    suggested       = max(0.40, min(best_baseline * 0.80, 0.95))
+    suggested       = round(round(suggested / 0.05) * 0.05, 2)
+
+    # ─── Persist everything to session_state ──────────────────────────────────
+    st.session_state.sim_done              = True
+    st.session_state.rel_df               = rel_df
+    st.session_state.all_results          = all_results
+    st.session_state.distortion_levels    = distortion_levels
+    st.session_state.selected_models_snap = selected_models
+    st.session_state.ds_name_snap         = ds_name
+    st.session_state.max_level_snap       = max_level
+    st.session_state.suggested_threshold  = suggested
+    st.session_state.best_baseline        = best_baseline
+    st.session_state.fig_main             = fig
+    st.session_state.analysis_df          = analysis_df
+    st.session_state.analysis_results     = analysis_results
+    st.session_state.settings             = {
+        "max_distortion_level": max_level,
+        "num_levels":           num_levels,
+        "test_size":            test_size,
+        "scale_data":           scale_data,
+        "random_seed":          int(random_seed),
+        "selected_models":      selected_models,
+    }
+    st.session_state.distortions_used = {
+        "gaussian_noise":     use_noise,
+        "covariate_drift":    use_drift,
+        "distribution_shift": use_dist_shift,
+        "class_imbalance":    use_imbalance,
+        "missing_values":     use_missing,
+        "label_noise":        use_label_noise,
+        "outlier_injection":  use_outliers,
+        "feature_corruption": use_corruption,
+    }
+    st.session_state.rf_res  = all_results.get("Random Forest",
+                               [empty_result] * len(distortion_levels))
+    st.session_state.lr_res  = all_results.get("Logistic Regression",
+                               [empty_result] * len(distortion_levels))
+    st.session_state.svm_res = all_results.get("SVM",
+                               [empty_result] * len(distortion_levels))
+
+# ─── Per-Distortion Analysis (outside button block — survives widget changes) ──
+if st.session_state.sim_done and st.session_state.analysis_results is not None:
+
+    st.markdown("---")
+    st.subheader("Per-Distortion Analysis")
+    st.markdown(
+        f"Each distortion type applied **individually** at level "
+        f"`{st.session_state.max_level_snap}` "
+        "— shows which one hurts each model the most."
+    )
+
+    metric_choice = st.selectbox(
+        "Metric to visualize", ["accuracy", "f1", "roc_auc"], index=0,
+        key="metric_choice"
+    )
+
+    fig_a = _build_distortion_bar_chart(
+        st.session_state.analysis_results,
+        metric_choice,
+        st.session_state.selected_models_snap,
+        st.session_state.max_level_snap,
+        st.session_state.ds_name_snap,
+    )
+    st.pyplot(fig_a)
+    plt.close(fig_a)
+
+    # Store the latest fig_a for run_logger (metric may have changed)
+    st.session_state.fig_analysis = fig_a
+
+    st.subheader("Per-Distortion Results Table")
+    st.dataframe(st.session_state.analysis_df, use_container_width=True)
+
+    st.download_button(
+        label="Download Analysis as CSV",
+        data=st.session_state.analysis_df.to_csv(index=False),
+        file_name="per_distortion_analysis.csv",
+        mime="text/csv"
+    )
+
+# ─── Reliability Analysis (outside button block — survives widget changes) ──────
+if st.session_state.sim_done and st.session_state.rel_df is not None:
+
+    rel_df        = st.session_state.rel_df
+    best_baseline = st.session_state.best_baseline
+    suggested     = st.session_state.suggested_threshold
+    snap_models   = st.session_state.selected_models_snap
+    snap_ds       = st.session_state.ds_name_snap
+    snap_max      = st.session_state.max_level_snap
+
+    st.markdown("---")
+    st.subheader("Model Reliability Horizon")
+
+    with st.expander("What is this?", expanded=False):
+        st.markdown(
+            "Defines a **reliability threshold** and finds the exact distortion level "
+            "where each model crosses it — the **reliability horizon**.\n\n"
+            "- Green zones = safe operating range\n"
+            "- Red zones = model should not be trusted\n\n"
+            "**Tip:** The threshold is auto-suggested at 80% of the best model's clean "
+            "baseline. Adjust it to match your deployment requirements."
+        )
+
+    # Info banner
+    st.info(
+        f"Best baseline across selected models: **{best_baseline:.3f}** | "
+        f"Auto-suggested threshold: **{suggested:.2f}** (80% of baseline) | "
+        "Adjust below as needed."
+    )
+
+    col_thresh, col_metric_rel = st.columns(2)
+
+    worst_baseline = rel_df.groupby("model_name")["accuracy"].first().min()
+    slider_min     = max(0.05, round(round(worst_baseline * 0.5 / 0.05) * 0.05, 2))
+
+    reliability_threshold = col_thresh.slider(
+        "Reliability threshold",
+        min_value=float(slider_min),
+        max_value=0.99,
+        value=float(suggested),
+        step=0.05,
+        key="rel_threshold",
+        help=(
+            f"Minimum acceptable performance. "
+            f"Auto-set to {suggested:.0%} based on best baseline ({best_baseline:.1%})."
+        )
+    )
+    reliability_metric = col_metric_rel.selectbox(
+        "Metric",
+        ["accuracy", "f1", "precision", "recall"],
+        index=0,
+        key="rel_metric"
+    )
+
+    # Recompute horizons on every widget change (fast, no re-simulation)
     horizons_df = compute_reliability_horizons(
         rel_df,
         metric=reliability_metric,
         threshold=reliability_threshold,
     )
 
-    with st.spinner("Plotting reliability windows..."):
-        rel_fig = plot_reliability_windows(
-            rel_df, horizons_df, MODEL_COLORS,
-            metric=reliability_metric,
-            threshold=reliability_threshold,
-        )
+    # Replot on every widget change
+    rel_fig = plot_reliability_windows(
+        rel_df, horizons_df, MODEL_COLORS,
+        metric=reliability_metric,
+        threshold=reliability_threshold,
+    )
     st.pyplot(rel_fig, use_container_width=True)
     plt.close(rel_fig)
 
-    # Horizon summary table
+    # Horizon table
     st.markdown("**Reliability Horizon Table**")
 
     def _colour_reliable_range(val):
@@ -576,8 +696,8 @@ if st.sidebar.button("Run Simulation"):
     )
     st.dataframe(styled_horizons, use_container_width=True)
 
-    # Verdict markdown
-    verdict_md = get_reliability_verdict(horizons_df, max_level)
+    # Verdict
+    verdict_md = get_reliability_verdict(horizons_df, snap_max)
     st.markdown(verdict_md)
 
     # Download
@@ -589,43 +709,33 @@ if st.sidebar.button("Run Simulation"):
         mime="text/csv",
     )
 
-    # ─── Save Run ──────────────────────────────────────────────────────────────
-    settings = {
-        "max_distortion_level": max_level,
-        "num_levels":           num_levels,
-        "test_size":            test_size,
-        "scale_data":           scale_data,
-        "random_seed":          int(random_seed),
-        "selected_models":      selected_models,
-    }
-    distortions_used = {
-        "gaussian_noise":     use_noise,
-        "covariate_drift":    use_drift,
-        "distribution_shift": use_dist_shift,
-        "class_imbalance":    use_imbalance,
-        "missing_values":     use_missing,
-        "label_noise":        use_label_noise,
-        "outlier_injection":  use_outliers,
-        "feature_corruption": use_corruption,
-    }
+    # ─── Save Run (once per simulation, not on every widget change) ────────────
+    if not st.session_state.run_saved:
+        run_id, run_dir = save_run(
+            st.session_state.ds_name_snap,
+            st.session_state.settings,
+            st.session_state.distortions_used,
+            st.session_state.distortion_levels,
+            st.session_state.rf_res,
+            st.session_state.lr_res,
+            st.session_state.svm_res,
+            st.session_state.fig_main,
+            fig_analysis=st.session_state.fig_analysis,
+            analysis_df=st.session_state.analysis_df,
+            fig_reliability=rel_fig,
+            horizons_df=horizons_df,
+            reliability_threshold=reliability_threshold,
+            reliability_metric=reliability_metric,
+        )
+        st.session_state.run_saved   = True
+        st.session_state.last_run_id  = run_id
+        st.session_state.last_run_dir = str(run_dir)
 
-    rf_res  = all_results.get("Random Forest",       [empty_result] * len(distortion_levels))
-    lr_res  = all_results.get("Logistic Regression", [empty_result] * len(distortion_levels))
-    svm_res = all_results.get("SVM",                 [empty_result] * len(distortion_levels))
-
-    run_id, run_dir = save_run(
-        ds_name, settings, distortions_used,
-        distortion_levels, rf_res, lr_res, svm_res,
-        fig,
-        fig_analysis=fig_a,
-        analysis_df=analysis_df,
-        # ── reliability data ──────────────────────────────────────────────────
-        fig_reliability=rel_fig,
-        horizons_df=horizons_df,
-        reliability_threshold=reliability_threshold,
-        reliability_metric=reliability_metric,
-    )
-    st.info(f"Run #{run_id:03d} saved to `{run_dir}/`")
+    if st.session_state.last_run_id:
+        st.info(
+            f"Run #{st.session_state.last_run_id:03d} saved to "
+            f"`{st.session_state.last_run_dir}/`"
+        )
 
 # ─── Run History ───────────────────────────────────────────────────────────────
 st.markdown("---")
@@ -637,7 +747,9 @@ else:
     st.markdown(f"**{len(all_runs)} run(s) saved**")
     for run in reversed(all_runs):
         distortions_on = [k for k, v in run["distortions_used"].items() if v]
-        models_used    = run["settings"].get("selected_models", ["Random Forest", "Logistic Regression", "SVM"])
+        models_used    = run["settings"].get(
+            "selected_models", ["Random Forest", "Logistic Regression", "SVM"]
+        )
         with st.expander(
             f"Run #{run['run_id']:03d} — {run['timestamp']} — "
             f"Dataset: {run['dataset']} — "
@@ -653,24 +765,25 @@ else:
                 f"Distortions: {', '.join(distortions_on) if distortions_on else 'None'}"
             )
 
-            # ── Main simulation chart ─────────────────────────────────────────
+            # Main simulation chart
             if run.get("_png_path") and os.path.exists(run["_png_path"]):
                 st.markdown("**Main Simulation Chart:**")
                 st.image(run["_png_path"], use_column_width=True)
             else:
                 st.warning("Main chart not found for this run.")
 
-            # ── Per-distortion chart ──────────────────────────────────────────
+            # Per-distortion chart
             if run.get("_analysis_png_path") and os.path.exists(run["_analysis_png_path"]):
                 st.markdown("**Per-Distortion Analysis Chart:**")
                 st.image(run["_analysis_png_path"], use_column_width=True)
 
-            # ── Reliability chart ─────────────────────────────────────────────
-            if run.get("_reliability_png_path") and os.path.exists(run["_reliability_png_path"]):
+            # Reliability chart
+            if (run.get("_reliability_png_path")
+                    and os.path.exists(run["_reliability_png_path"])):
                 st.markdown("**Reliability Horizon Chart:**")
                 st.image(run["_reliability_png_path"], use_column_width=True)
 
-            # ── Reliability summary from stored JSON ──────────────────────────
+            # Reliability summary
             rel_data = run.get("reliability", {})
             if rel_data and rel_data.get("horizons"):
                 st.markdown(
@@ -682,11 +795,15 @@ else:
                 st.markdown("**Reliability Horizon Table:**")
                 st.dataframe(horizons_history, use_container_width=True)
 
-                # Most + least reliable model from stored data
-                if not horizons_history.empty and "Reliable Range (%)" in horizons_history.columns:
-                    best_row  = horizons_history.loc[horizons_history["Reliable Range (%)"].idxmax()]
-                    worst_row = horizons_history.loc[horizons_history["Reliable Range (%)"].idxmin()]
-                    rc1, rc2  = st.columns(2)
+                if (not horizons_history.empty
+                        and "Reliable Range (%)" in horizons_history.columns):
+                    best_row  = horizons_history.loc[
+                        horizons_history["Reliable Range (%)"].idxmax()
+                    ]
+                    worst_row = horizons_history.loc[
+                        horizons_history["Reliable Range (%)"].idxmin()
+                    ]
+                    rc1, rc2 = st.columns(2)
                     rc1.metric(
                         "Most Reliable Model",
                         best_row["Model"],
@@ -699,24 +816,24 @@ else:
                         delta_color="inverse"
                     )
 
-            # ── Simulation results table ──────────────────────────────────────
-            rows = []
-            levels_list = run["levels"]
-            rf_res  = run["results"]["random_forest"]
-            lr_res  = run["results"]["logistic_regression"]
-            svm_res = run["results"]["svm"]
-            for i, level in enumerate(levels_list):
+            # Simulation results table
+            rows      = []
+            lvls      = run["levels"]
+            rf_res_h  = run["results"]["random_forest"]
+            lr_res_h  = run["results"]["logistic_regression"]
+            svm_res_h = run["results"]["svm"]
+            for i, level in enumerate(lvls):
                 rows.append({
                     "Level":   round(level, 3),
-                    "RF Acc":  round(rf_res[i].get("accuracy",  0), 3),
-                    "RF F1":   round(rf_res[i].get("f1",        0), 3),
-                    "RF AUC":  round(rf_res[i].get("roc_auc",   0), 3),
-                    "LR Acc":  round(lr_res[i].get("accuracy",  0), 3),
-                    "LR F1":   round(lr_res[i].get("f1",        0), 3),
-                    "LR AUC":  round(lr_res[i].get("roc_auc",   0), 3),
-                    "SVM Acc": round(svm_res[i].get("accuracy", 0), 3),
-                    "SVM F1":  round(svm_res[i].get("f1",       0), 3),
-                    "SVM AUC": round(svm_res[i].get("roc_auc",  0), 3),
+                    "RF Acc":  round(rf_res_h[i].get("accuracy",  0), 3),
+                    "RF F1":   round(rf_res_h[i].get("f1",        0), 3),
+                    "RF AUC":  round(rf_res_h[i].get("roc_auc",   0), 3),
+                    "LR Acc":  round(lr_res_h[i].get("accuracy",  0), 3),
+                    "LR F1":   round(lr_res_h[i].get("f1",        0), 3),
+                    "LR AUC":  round(lr_res_h[i].get("roc_auc",   0), 3),
+                    "SVM Acc": round(svm_res_h[i].get("accuracy", 0), 3),
+                    "SVM F1":  round(svm_res_h[i].get("f1",       0), 3),
+                    "SVM AUC": round(svm_res_h[i].get("roc_auc",  0), 3),
                 })
             st.markdown("**Simulation Results:**")
             st.dataframe(pd.DataFrame(rows), use_container_width=True)
