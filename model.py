@@ -16,16 +16,15 @@ DATASETS = {
 }
 
 ALL_MODELS = {
-    "Random Forest":        lambda: RandomForestClassifier(n_estimators=100, random_state=42),
-    "Logistic Regression":  lambda: LogisticRegression(max_iter=2000, random_state=42),
-    "SVM":                  lambda: SVC(kernel='rbf', random_state=42, probability=True),
-    "Decision Tree":        lambda: DecisionTreeClassifier(random_state=42),
-    "KNN":                  lambda: KNeighborsClassifier(n_neighbors=5),
-    "Gradient Boosting":    lambda: GradientBoostingClassifier(n_estimators=100, random_state=42),
-    "XGBoost":              XGBClassifier(n_estimators=100, random_state=42,
-                                          eval_metric='mlogloss',
-                                          use_label_encoder=False,
-                                          verbosity=0),
+    "Random Forest":       lambda: RandomForestClassifier(n_estimators=100, random_state=42),
+    "Logistic Regression": lambda: LogisticRegression(max_iter=2000, random_state=42),
+    "SVM":                 lambda: SVC(kernel='rbf', random_state=42, probability=True),
+    "Decision Tree":       lambda: DecisionTreeClassifier(random_state=42),
+    "KNN":                 lambda: KNeighborsClassifier(n_neighbors=5),
+    "Gradient Boosting":   lambda: GradientBoostingClassifier(n_estimators=100, random_state=42),
+    "XGBoost":             lambda: XGBClassifier(n_estimators=100, random_state=42,
+                                                  eval_metric='mlogloss',
+                                                  verbosity=0),
 }
 
 MODEL_COLORS = {
@@ -35,7 +34,7 @@ MODEL_COLORS = {
     "Decision Tree":       "orange",
     "KNN":                 "purple",
     "Gradient Boosting":   "crimson",
-    "XGBoost": "#e74c3c",
+    "XGBoost":             "#e74c3c",
 }
 
 MODEL_MARKERS = {
@@ -45,7 +44,7 @@ MODEL_MARKERS = {
     "Decision Tree":       "D",
     "KNN":                 "P",
     "Gradient Boosting":   "*",
-    "XGBoost": "D",
+    "XGBoost":             "X",
 }
 
 
@@ -68,7 +67,7 @@ def load_dataset(name="iris", csv_path=None):
 def train_models(X_train, y_train, selected_models=None):
     """
     Train selected models. Returns dict {model_name: trained_model}.
-    If selected_models is None, trains all 6.
+    If selected_models is None, trains all 7.
     """
     if selected_models is None:
         selected_models = list(ALL_MODELS.keys())
