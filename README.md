@@ -14,11 +14,15 @@ Simulate how ML classification models degrade under real-world data distortions 
 
 ![reliability](reliability.png)
 
+## 🔲 Confusion Matrices — Clean vs Max Distortion
+
+![confusion_matrices](confusion_matrices.png)
+
 ---
 
 ## What it does
 
-Trains up to **7 ML models** on clean data, then evaluates them across increasing distortion levels. Tracks **6 metrics** at each level, produces a **2×3 comparison chart**, runs a **per-distortion analysis** showing which distortion type hurts each model the most, and computes a **reliability horizon** — the exact distortion level at which each model becomes untrustworthy. Every run is saved locally with charts, metrics, and reliability data.
+Trains up to **7 ML models** on clean data, then evaluates them across increasing distortion levels. Tracks **6 metrics** at each level, produces a **2×3 comparison chart**, runs a **per-distortion analysis** showing which distortion type hurts each model the most, computes a **reliability horizon** — the exact distortion level at which each model becomes untrustworthy — and renders **confusion matrices** comparing each model's clean vs max-distortion classification behaviour. Every run is saved locally with charts, metrics, and reliability data.
 
 ---
 
@@ -90,6 +94,27 @@ Trains up to **7 ML models** on clean data, then evaluates them across increasin
 
 ---
 
+## 🔲 Confusion Matrices
+
+Shows each model's confusion matrix at **clean baseline** (left) and **max distortion** (right) side by side.
+
+### What it shows
+
+- Each cell displays raw count and row-normalised percentage
+- Diagonal cells = correct predictions; off-diagonal = misclassifications
+- Accuracy shown below each matrix
+- Color intensity reflects prediction confidence per cell
+- Clean vs distorted CMs use the same class labels even if class imbalance distortion drops samples
+
+### Accuracy summary cards
+
+Below the confusion matrix chart, `st.metric` cards show:
+- Clean baseline accuracy per model
+- Accuracy drop at max distortion
+- Delta displayed as negative (red) to highlight degradation
+
+---
+
 ## ⏱️ Model Reliability Horizon
 
 Answers the key question: **"At what distortion level does this model become untrustworthy?"**
@@ -103,7 +128,7 @@ Answers the key question: **"At what distortion level does this model become unt
 
 ### Auto-threshold
 
-The threshold is **auto-suggested at 80% of the best model's clean baseline accuracy** — so it always produces meaningful results regardless of how hard or easy the dataset is. For a dataset where the best model scores 0.55, the threshold is auto-set to 0.44 rather than defaulting to 0.75 (which would mark everything as "Below Threshold at Baseline").
+The threshold is **auto-suggested at 80% of the best model's clean baseline accuracy** — so it always produces meaningful results regardless of how hard or easy the dataset is.
 
 ### Robustness tiers
 
@@ -115,15 +140,16 @@ The threshold is **auto-suggested at 80% of the best model's clean baseline accu
 
 ### Outputs
 
-- **Per-model subplots** — green shaded (safe zone) and red shaded (unreliable zone) with a threshold line and horizon marker flag
+- **Per-model subplots** — green shaded (safe zone) and red shaded (unreliable zone) with threshold line and horizon marker
+- **Best model banner** — green `st.success` box showing the recommended model in bold
 - **Colour-coded Reliability Horizon Table** — Reliable Range % highlighted green/yellow/red
-- **Auto-generated verdict** — viva-ready conclusion paragraph summarising most/least reliable models
-- **Metric selector** — switch between accuracy, F1, precision, recall; chart and table update instantly without re-running the simulation
+- **Auto-generated verdict** — viva-ready conclusion paragraph
+- **Metric selector** — switch between accuracy, F1, precision, recall without re-running simulation
 - **CSV download** — reliability horizon table exportable for reports
 
 ### Persistent widget state
 
-Changing the threshold slider or metric dropdown **does not re-run the simulation** — it recomputes the horizon from cached results and re-renders the chart instantly. The per-distortion chart metric selector works the same way.
+Changing the threshold slider or metric dropdown **does not re-run the simulation** — it recomputes from cached results instantly. The per-distortion chart metric selector works the same way.
 
 ---
 
@@ -138,6 +164,7 @@ results/
 │   ├── results.png                  # Main 2×3 simulation chart
 │   ├── per_distortion.png           # Per-distortion bar chart
 │   ├── reliability.png              # Reliability horizon chart
+│   ├── confusion_matrices.png       # Clean vs max distortion confusion matrices
 │   ├── per_distortion_analysis.csv  # Per-distortion results table
 │   └── reliability_horizons.csv     # Reliability horizon table
 ├── run_002/
@@ -148,6 +175,7 @@ The **Run History** section in the Streamlit dashboard shows all past runs with:
 - Main simulation chart image
 - Per-distortion chart image
 - Reliability horizon chart image
+- Confusion matrices chart image
 - Reliability settings used (metric + threshold)
 - Reliability horizon table with most/least reliable model summary cards
 - Full simulation results table
@@ -182,7 +210,11 @@ Each `run_NNN.json` stores:
         "Rank": 1
       }
     ]
-  }
+  },
+  "_png_path": "results/run_001/results.png",
+  "_analysis_png_path": "results/run_001/per_distortion.png",
+  "_reliability_png_path": "results/run_001/reliability.png",
+  "_confusion_png_path": "results/run_001/confusion_matrices.png"
 }
 ```
 
@@ -242,24 +274,26 @@ All 7 tests pass.
 
 ```
 AI-Model-Performance-Simulator/
-├── app.py                    # Streamlit web dashboard
-├── main.py                   # CLI entry point
-├── model.py                  # 7 models + dataset loading + colors/markers
-├── distortions.py            # 8 distortion functions
-├── distortion_analysis.py    # Per-distortion analysis engine
-├── evaluation.py             # 6 metrics — accuracy, precision, recall, F1, ROC-AUC, confidence
-├── visualization.py          # 2×3 metrics chart
-├── reliability_analysis.py   # Reliability horizon tracker
-├── run_logger.py             # Run history — save + load (JSON + PNG + CSV)
-├── test_simulator.py         # Unit tests (7/7 passing)
+├── app.py                         # Streamlit web dashboard
+├── main.py                        # CLI entry point
+├── model.py                       # 7 models + dataset loading + colors/markers
+├── distortions.py                 # 8 distortion functions
+├── distortion_analysis.py         # Per-distortion analysis engine
+├── evaluation.py                  # 6 metrics — accuracy, precision, recall, F1, ROC-AUC, confidence
+├── visualization.py               # 2×3 metrics chart
+├── reliability_analysis.py        # Reliability horizon tracker
+├── confusion_matrix_analysis.py   # Clean vs max distortion confusion matrices
+├── run_logger.py                  # Run history — save + load (JSON + PNG + CSV)
+├── test_simulator.py              # Unit tests (7/7 passing)
 ├── requirements.txt
 ├── .gitignore
-└── results/                  # Saved run folders (git-ignored)
+└── results/                       # Saved run folders (git-ignored)
     └── run_NNN/
         ├── run_NNN.json
         ├── results.png
         ├── per_distortion.png
         ├── reliability.png
+        ├── confusion_matrices.png
         ├── per_distortion_analysis.csv
         └── reliability_horizons.csv
 ```
@@ -288,7 +322,10 @@ Streamlit reruns the entire script on every widget interaction. Without `st.sess
 A fixed default of 0.75 fails on hard datasets where even the best model scores 0.50 at baseline — every model would be marked "Below Threshold at Baseline" and the analysis would be meaningless. Auto-suggesting 80% of the best baseline makes the threshold dataset-aware.
 
 **Why interpolate the horizon?**
-A coarse distortion grid (e.g. 5 levels from 0 to 0.4) means a model might be fine at 0.3 and fail at 0.4, but the true crossing point is somewhere between. Linear interpolation gives a more precise horizon level instead of just reporting the last known good level.
+A coarse distortion grid (e.g. 5 levels from 0 to 0.4) means a model might be fine at 0.3 and fail at 0.4, but the true crossing point is somewhere between. Linear interpolation gives a more precise horizon level.
 
 **Why XGBoost?**
 XGBoost consistently outperforms standard Gradient Boosting on tabular data due to regularisation, parallelised tree building, and better handling of sparse features. It serves as a strong baseline for comparing ensemble robustness under distortion.
+
+**Why confusion matrices at max distortion only?**
+Showing every distortion level would produce too many matrices to be readable. Clean baseline vs max distortion gives the clearest before/after picture of how class boundaries collapse under stress. The accuracy delta cards below the matrices quantify the degradation at a glance.

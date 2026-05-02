@@ -52,6 +52,7 @@ defaults = {
     "X_test_max_dist":      None,
     "y_test":               None,
     "y_test_max_dist":      None,
+    "fig_confusion":        None,
 }
 for k, v in defaults.items():
     if k not in st.session_state:
@@ -662,6 +663,7 @@ if st.session_state.sim_done and st.session_state.trained_models is not None:
 
     cm_fig = plot_confusion_matrices(cm_results, MODEL_COLORS)
     st.pyplot(cm_fig, use_container_width=True)
+    st.session_state.fig_confusion = cm_fig
     plt.close(cm_fig)
 
     # Summary cards — accuracy at clean vs distorted per model
@@ -804,6 +806,7 @@ if st.session_state.sim_done and st.session_state.rel_df is not None:
             horizons_df=horizons_df,
             reliability_threshold=reliability_threshold,
             reliability_metric=reliability_metric,
+            fig_confusion=st.session_state.fig_confusion,
         )
         st.session_state.run_saved    = True
         st.session_state.last_run_id  = run_id
@@ -853,10 +856,10 @@ else:
                 st.markdown("**Per-Distortion Analysis Chart:**")
                 st.image(run["_analysis_png_path"], use_column_width=True)
 
-            if (run.get("_reliability_png_path")
-                    and os.path.exists(run["_reliability_png_path"])):
-                st.markdown("**Reliability Horizon Chart:**")
-                st.image(run["_reliability_png_path"], use_column_width=True)
+            if (run.get("_confusion_png_path")
+                    and os.path.exists(run["_confusion_png_path"])):
+                st.markdown("**Confusion Matrices:**")
+                st.image(run["_confusion_png_path"], use_column_width=True)
 
             rel_data = run.get("reliability", {})
             if rel_data and rel_data.get("horizons"):
