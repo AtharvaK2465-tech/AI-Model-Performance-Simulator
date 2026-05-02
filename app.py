@@ -17,6 +17,7 @@ from reliability_analysis import (
     plot_reliability_windows,
     get_reliability_verdict,
 )
+from confusion_matrix_analysis import compute_confusion_matrices, plot_confusion_matrices
 
 # ─── Page Config ───────────────────────────────────────────────────────────────
 st.set_page_config(page_title="AI Model Performance Simulator", layout="wide")
@@ -46,6 +47,11 @@ defaults = {
     "run_saved":            False,
     "last_run_id":          None,
     "last_run_dir":         None,
+    "trained_models":       None,
+    "X_test_clean":         None,
+    "X_test_max_dist":      None,
+    "y_test":               None,
+    "y_test_max_dist":      None,
 }
 for k, v in defaults.items():
     if k not in st.session_state:
@@ -234,7 +240,7 @@ else:
                 st.error(f"Target column has only 1 class. Need at least 2.")
                 st.stop()
             if n_classes > 50:
-                st.error(f"Target column has {n_classes} classes — looks like regression/ID.")
+                st.error(f"Target column has {n_classes} classes - looks like regression/ID.")
                 st.stop()
 
             class_counts    = Counter(y)
@@ -336,7 +342,6 @@ if not any([use_noise, use_drift, use_dist_shift, use_imbalance,
 # ─── Run Simulation ────────────────────────────────────────────────────────────
 if st.sidebar.button("Run Simulation"):
 
-    # Reset save flag so this new run gets saved fresh
     st.session_state.run_saved = False
 
     if X is None or y is None:
@@ -403,7 +408,7 @@ if st.sidebar.button("Run Simulation"):
             )
 
             if len(X_dist) == 0 or len(np.unique(y_dist)) < 2:
-                st.warning(f"Level {round(level, 2)}: Not enough class diversity — skipping.")
+                st.warning(f"Level {round(level, 2)}: Not enough class diversity - skipping.")
                 for name in selected_models:
                     all_results[name].append(empty_result.copy())
             else:
@@ -411,7 +416,7 @@ if st.sidebar.button("Run Simulation"):
                     all_results[name].append(evaluate(model, X_dist, y_dist))
 
         except Exception as e:
-            st.warning(f"Error at level {round(level, 2)}: {e} — skipping.")
+            st.warning(f"Error at level {round(level, 2)}: {e} - skipping.")
             for name in selected_models:
                 all_results[name].append(empty_result.copy())
 
@@ -490,7 +495,22 @@ if st.sidebar.button("Run Simulation"):
         mime="text/csv"
     )
 
-    # ─── Per-Distortion Analysis (compute + store only — render outside) ───────
+    # ─── Build max-distortion test set for confusion matrix ───────────────────
+    X_test_max_dist = X_test.copy()
+    y_test_max_dist = y_test.copy()
+    X_test_max_dist, y_test_max_dist = apply_distortion(
+        X_test_max_dist, y_test_max_dist,
+        noise_level       = max_level if use_noise       else 0.0,
+        drift_level       = max_level if use_drift       else 0.0,
+        dist_shift_level  = max_level if use_dist_shift  else 0.0,
+        imbalance_level   = max_level if use_imbalance   else 0.0,
+        missing_level     = max_level if use_missing     else 0.0,
+        label_noise_level = max_level if use_label_noise else 0.0,
+        outlier_level     = max_level if use_outliers    else 0.0,
+        corruption_level  = max_level if use_corruption  else 0.0,
+    )
+
+    # ─── Per-Distortion Analysis (compute only — render outside) ───────────────
     with st.spinner("Running per-distortion analysis..."):
         analysis_results = run_per_distortion_analysis(
             trained_models, X_test, y_test, level=max_level
@@ -524,10 +544,10 @@ if st.sidebar.button("Run Simulation"):
     rel_df = pd.DataFrame(rel_rows)
 
     # Auto-suggest threshold = 80% of best baseline, snapped to nearest 0.05
-    baseline_accs   = [all_results[name][0]["accuracy"] for name in selected_models]
-    best_baseline   = max(baseline_accs) if baseline_accs else 0.75
-    suggested       = max(0.40, min(best_baseline * 0.80, 0.95))
-    suggested       = round(round(suggested / 0.05) * 0.05, 2)
+    baseline_accs = [all_results[name][0]["accuracy"] for name in selected_models]
+    best_baseline = max(baseline_accs) if baseline_accs else 0.75
+    suggested     = max(0.40, min(best_baseline * 0.80, 0.95))
+    suggested     = round(round(suggested / 0.05) * 0.05, 2)
 
     # ─── Persist everything to session_state ──────────────────────────────────
     st.session_state.sim_done              = True
@@ -542,6 +562,11 @@ if st.sidebar.button("Run Simulation"):
     st.session_state.fig_main             = fig
     st.session_state.analysis_df          = analysis_df
     st.session_state.analysis_results     = analysis_results
+    st.session_state.trained_models       = trained_models
+    st.session_state.X_test_clean         = X_test
+    st.session_state.X_test_max_dist      = X_test_max_dist
+    st.session_state.y_test               = y_test
+    st.session_state.y_test_max_dist      = y_test_max_dist
     st.session_state.settings             = {
         "max_distortion_level": max_level,
         "num_levels":           num_levels,
@@ -567,7 +592,7 @@ if st.sidebar.button("Run Simulation"):
     st.session_state.svm_res = all_results.get("SVM",
                                [empty_result] * len(distortion_levels))
 
-# ─── Per-Distortion Analysis (outside button block — survives widget changes) ──
+# ─── Per-Distortion Analysis (outside button block) ────────────────────────────
 if st.session_state.sim_done and st.session_state.analysis_results is not None:
 
     st.markdown("---")
@@ -593,7 +618,6 @@ if st.session_state.sim_done and st.session_state.analysis_results is not None:
     st.pyplot(fig_a)
     plt.close(fig_a)
 
-    # Store the latest fig_a for run_logger (metric may have changed)
     st.session_state.fig_analysis = fig_a
 
     st.subheader("Per-Distortion Results Table")
@@ -606,14 +630,64 @@ if st.session_state.sim_done and st.session_state.analysis_results is not None:
         mime="text/csv"
     )
 
-# ─── Reliability Analysis (outside button block — survives widget changes) ──────
+# ─── Confusion Matrix (outside button block) ───────────────────────────────────
+if st.session_state.sim_done and st.session_state.trained_models is not None:
+
+    st.markdown("---")
+    st.subheader("Confusion Matrices — Clean Baseline vs Max Distortion")
+
+    with st.expander("What is this?", expanded=False):
+        st.markdown(
+            "Each model is shown two confusion matrices side by side — "
+            "**clean baseline** (left) and **max distortion** (right). "
+            "Each cell shows the raw count and row-normalised percentage. "
+            "Accuracy is shown below each matrix. "
+            "Use this to see exactly which classes get confused as distortion increases."
+        )
+
+    with st.spinner("Computing confusion matrices..."):
+        cm_results = compute_confusion_matrices(
+            trained_models   = st.session_state.trained_models,
+            X_train          = None,
+            y_train          = None,
+            X_test_clean     = st.session_state.X_test_clean,
+            y_test           = st.session_state.y_test,
+            X_test_distorted = st.session_state.X_test_max_dist,
+            y_test_distorted = st.session_state.y_test_max_dist,
+        )
+
+    for name, res in cm_results.items():
+        if "error" in res:
+            st.warning(f"Confusion matrix error for {name}: {res['error']}")
+
+    cm_fig = plot_confusion_matrices(cm_results, MODEL_COLORS)
+    st.pyplot(cm_fig, use_container_width=True)
+    plt.close(cm_fig)
+
+    # Summary cards — accuracy at clean vs distorted per model
+    st.markdown("**Accuracy Summary: Clean vs Max Distortion**")
+    valid = {k: v for k, v in cm_results.items() if "error" not in v}
+    if valid:
+        cols = st.columns(len(valid))
+        for col, (name, data) in zip(cols, valid.items()):
+            cm_clean = data["clean"]
+            cm_dist  = data["distorted"]
+            acc_clean = np.trace(cm_clean) / (cm_clean.sum() + 1e-9)
+            acc_dist  = np.trace(cm_dist)  / (cm_dist.sum()  + 1e-9)
+            drop      = acc_clean - acc_dist
+            col.metric(
+                label=name,
+                value=f"{acc_clean:.1%}",
+                delta=f"-{drop:.1%} at max distortion",
+                delta_color="inverse"
+            )
+
+# ─── Reliability Analysis (outside button block) ───────────────────────────────
 if st.session_state.sim_done and st.session_state.rel_df is not None:
 
     rel_df        = st.session_state.rel_df
     best_baseline = st.session_state.best_baseline
     suggested     = st.session_state.suggested_threshold
-    snap_models   = st.session_state.selected_models_snap
-    snap_ds       = st.session_state.ds_name_snap
     snap_max      = st.session_state.max_level_snap
 
     st.markdown("---")
@@ -629,7 +703,6 @@ if st.session_state.sim_done and st.session_state.rel_df is not None:
             "baseline. Adjust it to match your deployment requirements."
         )
 
-    # Info banner
     st.info(
         f"Best baseline across selected models: **{best_baseline:.3f}** | "
         f"Auto-suggested threshold: **{suggested:.2f}** (80% of baseline) | "
@@ -660,14 +733,12 @@ if st.session_state.sim_done and st.session_state.rel_df is not None:
         key="rel_metric"
     )
 
-    # Recompute horizons on every widget change (fast, no re-simulation)
     horizons_df = compute_reliability_horizons(
         rel_df,
         metric=reliability_metric,
         threshold=reliability_threshold,
     )
 
-    # Replot on every widget change
     rel_fig = plot_reliability_windows(
         rel_df, horizons_df, MODEL_COLORS,
         metric=reliability_metric,
@@ -676,7 +747,6 @@ if st.session_state.sim_done and st.session_state.rel_df is not None:
     st.pyplot(rel_fig, use_container_width=True)
     plt.close(rel_fig)
 
-    # Horizon table
     st.markdown("**Reliability Horizon Table**")
 
     def _colour_reliable_range(val):
@@ -696,11 +766,19 @@ if st.session_state.sim_done and st.session_state.rel_df is not None:
     )
     st.dataframe(styled_horizons, use_container_width=True)
 
-    # Verdict
     verdict_md = get_reliability_verdict(horizons_df, snap_max)
+
+    # Show best model prominently
+    if not horizons_df.empty:
+        best = horizons_df.iloc[0]
+        st.success(
+            f"🏆 **Recommended Model: {best['Model']}** — "
+            f"Reliable for {best['Reliable Range (%)']:.1f}% of the distortion range "
+            f"(until level `{best['Horizon Level']:.3f}`)"
+        )
+
     st.markdown(verdict_md)
 
-    # Download
     rel_csv = horizons_df.to_csv(index=False).encode("utf-8")
     st.download_button(
         "Download Reliability Report CSV",
@@ -709,7 +787,7 @@ if st.session_state.sim_done and st.session_state.rel_df is not None:
         mime="text/csv",
     )
 
-    # ─── Save Run (once per simulation, not on every widget change) ────────────
+    # ─── Save Run (once per simulation) ───────────────────────────────────────
     if not st.session_state.run_saved:
         run_id, run_dir = save_run(
             st.session_state.ds_name_snap,
@@ -727,7 +805,7 @@ if st.session_state.sim_done and st.session_state.rel_df is not None:
             reliability_threshold=reliability_threshold,
             reliability_metric=reliability_metric,
         )
-        st.session_state.run_saved   = True
+        st.session_state.run_saved    = True
         st.session_state.last_run_id  = run_id
         st.session_state.last_run_dir = str(run_dir)
 
@@ -765,25 +843,21 @@ else:
                 f"Distortions: {', '.join(distortions_on) if distortions_on else 'None'}"
             )
 
-            # Main simulation chart
             if run.get("_png_path") and os.path.exists(run["_png_path"]):
                 st.markdown("**Main Simulation Chart:**")
                 st.image(run["_png_path"], use_column_width=True)
             else:
                 st.warning("Main chart not found for this run.")
 
-            # Per-distortion chart
             if run.get("_analysis_png_path") and os.path.exists(run["_analysis_png_path"]):
                 st.markdown("**Per-Distortion Analysis Chart:**")
                 st.image(run["_analysis_png_path"], use_column_width=True)
 
-            # Reliability chart
             if (run.get("_reliability_png_path")
                     and os.path.exists(run["_reliability_png_path"])):
                 st.markdown("**Reliability Horizon Chart:**")
                 st.image(run["_reliability_png_path"], use_column_width=True)
 
-            # Reliability summary
             rel_data = run.get("reliability", {})
             if rel_data and rel_data.get("horizons"):
                 st.markdown(
@@ -816,7 +890,6 @@ else:
                         delta_color="inverse"
                     )
 
-            # Simulation results table
             rows      = []
             lvls      = run["levels"]
             rf_res_h  = run["results"]["random_forest"]
