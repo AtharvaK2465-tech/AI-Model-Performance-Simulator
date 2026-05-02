@@ -6,18 +6,18 @@ Saves every simulation run to results/run_NNN/ with:
   - per_distortion.png         (per-distortion bar chart)
   - reliability.png            (reliability horizon chart)
   - confusion_matrices.png     (clean vs max distortion confusion matrices)
+  - degradation_analysis.png   (degradation rate + robustness ranking)
   - per_distortion_analysis.csv
   - reliability_horizons.csv
+  - degradation_summary.csv
 """
 
-import os
 import json
 import datetime
 from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 
 RESULTS_DIR = Path("results")
 
@@ -53,32 +53,36 @@ def save_run(
     reliability_threshold=None,
     reliability_metric=None,
     fig_confusion=None,
+    fig_degradation=None,
+    summary_df=None,
 ):
     run_id  = _get_next_run_id()
     run_dir = RESULTS_DIR / f"run_{run_id:03d}"
     run_dir.mkdir(parents=True, exist_ok=True)
 
-    # ── Save main chart ────────────────────────────────────────────────────────
+    # ── Save charts ────────────────────────────────────────────────────────────
     main_png = run_dir / "results.png"
     fig_main.savefig(main_png, dpi=120, bbox_inches="tight")
 
-    # ── Save per-distortion chart ──────────────────────────────────────────────
     analysis_png = None
     if fig_analysis is not None:
         analysis_png = run_dir / "per_distortion.png"
         fig_analysis.savefig(analysis_png, dpi=120, bbox_inches="tight")
 
-    # ── Save reliability chart ─────────────────────────────────────────────────
     reliability_png = None
     if fig_reliability is not None:
         reliability_png = run_dir / "reliability.png"
         fig_reliability.savefig(reliability_png, dpi=120, bbox_inches="tight")
 
-    # ── Save confusion matrix chart ────────────────────────────────────────────
     confusion_png = None
     if fig_confusion is not None:
         confusion_png = run_dir / "confusion_matrices.png"
         fig_confusion.savefig(confusion_png, dpi=120, bbox_inches="tight")
+
+    degradation_png = None
+    if fig_degradation is not None:
+        degradation_png = run_dir / "degradation_analysis.png"
+        fig_degradation.savefig(degradation_png, dpi=120, bbox_inches="tight")
 
     # ── Build reliability data for JSON ───────────────────────────────────────
     reliability_data = {}
@@ -89,24 +93,31 @@ def save_run(
             "horizons":  horizons_df.to_dict(orient="records"),
         }
 
+    # ── Build degradation data for JSON ───────────────────────────────────────
+    degradation_data = {}
+    if summary_df is not None and not summary_df.empty:
+        degradation_data = summary_df.to_dict(orient="records")
+
     # ── Build JSON payload ─────────────────────────────────────────────────────
     payload = {
-        "run_id":                run_id,
-        "timestamp":             datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "dataset":               dataset_name,
-        "settings":              settings,
-        "distortions_used":      distortions_used,
-        "levels":                distortion_levels,
+        "run_id":                  run_id,
+        "timestamp":               datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "dataset":                 dataset_name,
+        "settings":                settings,
+        "distortions_used":        distortions_used,
+        "levels":                  distortion_levels,
         "results": {
             "random_forest":       rf_results,
             "logistic_regression": lr_results,
             "svm":                 svm_results,
         },
         "reliability":             reliability_data,
+        "degradation":             degradation_data,
         "_png_path":               str(main_png),
-        "_analysis_png_path":      str(analysis_png)    if analysis_png    else None,
-        "_reliability_png_path":   str(reliability_png) if reliability_png else None,
-        "_confusion_png_path":     str(confusion_png)   if confusion_png   else None,
+        "_analysis_png_path":      str(analysis_png)     if analysis_png     else None,
+        "_reliability_png_path":   str(reliability_png)  if reliability_png  else None,
+        "_confusion_png_path":     str(confusion_png)    if confusion_png    else None,
+        "_degradation_png_path":   str(degradation_png)  if degradation_png  else None,
     }
 
     # ── Save CSVs ─────────────────────────────────────────────────────────────
@@ -115,6 +126,9 @@ def save_run(
 
     if horizons_df is not None and not horizons_df.empty:
         horizons_df.to_csv(run_dir / "reliability_horizons.csv", index=False)
+
+    if summary_df is not None and not summary_df.empty:
+        summary_df.to_csv(run_dir / "degradation_summary.csv", index=False)
 
     # ── Write JSON ─────────────────────────────────────────────────────────────
     json_path = run_dir / f"run_{run_id:03d}.json"

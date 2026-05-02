@@ -18,6 +18,7 @@ from reliability_analysis import (
     get_reliability_verdict,
 )
 from confusion_matrix_analysis import compute_confusion_matrices, plot_confusion_matrices
+from degradation_analysis import compute_degradation, plot_degradation, get_robustness_tier
 
 # ─── Page Config ───────────────────────────────────────────────────────────────
 st.set_page_config(page_title="AI Model Performance Simulator", layout="wide")
@@ -53,6 +54,8 @@ defaults = {
     "y_test":               None,
     "y_test_max_dist":      None,
     "fig_confusion":        None,
+    "fig_degradation":      None,
+    "summary_df":           None,
 }
 for k, v in defaults.items():
     if k not in st.session_state:
@@ -402,7 +405,7 @@ if st.sidebar.button("Run Simulation"):
                 drift_level       = level if use_drift       else 0.0,
                 dist_shift_level  = level if use_dist_shift  else 0.0,
                 imbalance_level   = level if use_imbalance   else 0.0,
-                missing_level     = level if use_missing     else 0.0,
+                missing_level     = level if use_missing      else 0.0,
                 label_noise_level = level if use_label_noise else 0.0,
                 outlier_level     = level if use_outliers    else 0.0,
                 corruption_level  = level if use_corruption  else 0.0,
@@ -505,13 +508,13 @@ if st.sidebar.button("Run Simulation"):
         drift_level       = max_level if use_drift       else 0.0,
         dist_shift_level  = max_level if use_dist_shift  else 0.0,
         imbalance_level   = max_level if use_imbalance   else 0.0,
-        missing_level     = max_level if use_missing     else 0.0,
+        missing_level     = max_level if use_missing      else 0.0,
         label_noise_level = max_level if use_label_noise else 0.0,
         outlier_level     = max_level if use_outliers    else 0.0,
         corruption_level  = max_level if use_corruption  else 0.0,
     )
 
-    # ─── Per-Distortion Analysis (compute only — render outside) ───────────────
+    # ─── Per-Distortion Analysis (compute only) ────────────────────────────────
     with st.spinner("Running per-distortion analysis..."):
         analysis_results = run_per_distortion_analysis(
             trained_models, X_test, y_test, level=max_level
@@ -544,11 +547,14 @@ if st.sidebar.button("Run Simulation"):
             })
     rel_df = pd.DataFrame(rel_rows)
 
-    # Auto-suggest threshold = 80% of best baseline, snapped to nearest 0.05
+    # Auto-suggest threshold
     baseline_accs = [all_results[name][0]["accuracy"] for name in selected_models]
     best_baseline = max(baseline_accs) if baseline_accs else 0.75
     suggested     = max(0.40, min(best_baseline * 0.80, 0.95))
     suggested     = round(round(suggested / 0.05) * 0.05, 2)
+
+    # Pre-compute degradation summary
+    summary_df = compute_degradation(rel_df, metric="accuracy")
 
     # ─── Persist everything to session_state ──────────────────────────────────
     st.session_state.sim_done              = True
@@ -568,6 +574,7 @@ if st.sidebar.button("Run Simulation"):
     st.session_state.X_test_max_dist      = X_test_max_dist
     st.session_state.y_test               = y_test
     st.session_state.y_test_max_dist      = y_test_max_dist
+    st.session_state.summary_df           = summary_df
     st.session_state.settings             = {
         "max_distortion_level": max_level,
         "num_levels":           num_levels,
@@ -601,7 +608,7 @@ if st.session_state.sim_done and st.session_state.analysis_results is not None:
     st.markdown(
         f"Each distortion type applied **individually** at level "
         f"`{st.session_state.max_level_snap}` "
-        "— shows which one hurts each model the most."
+        "-- shows which one hurts each model the most."
     )
 
     metric_choice = st.selectbox(
@@ -618,7 +625,6 @@ if st.session_state.sim_done and st.session_state.analysis_results is not None:
     )
     st.pyplot(fig_a)
     plt.close(fig_a)
-
     st.session_state.fig_analysis = fig_a
 
     st.subheader("Per-Distortion Results Table")
@@ -631,19 +637,92 @@ if st.session_state.sim_done and st.session_state.analysis_results is not None:
         mime="text/csv"
     )
 
+# ─── Degradation Rate Analysis (outside button block) ──────────────────────────
+if st.session_state.sim_done and st.session_state.rel_df is not None:
+
+    st.markdown("---")
+    st.subheader("Degradation Rate Analysis")
+
+    with st.expander("What is this?", expanded=False):
+        st.markdown(
+            "Shows how fast each model degrades as distortion increases. "
+            "**Robustness Score** is the area under the performance curve normalised to 0-100 "
+            "-- higher means the model held up better across all distortion levels. "
+            "**Deg Rate/Level** is the metric value lost per unit of distortion."
+        )
+
+    deg_metric = st.selectbox(
+        "Metric for degradation analysis",
+        ["accuracy", "f1", "precision", "recall"],
+        index=0,
+        key="deg_metric"
+    )
+
+    summary_df = compute_degradation(st.session_state.rel_df, metric=deg_metric)
+    st.session_state.summary_df = summary_df
+
+    deg_fig = plot_degradation(
+        st.session_state.rel_df, summary_df, MODEL_COLORS, metric=deg_metric
+    )
+    st.pyplot(deg_fig, use_container_width=True)
+    st.session_state.fig_degradation = deg_fig
+    plt.close(deg_fig)
+
+    # ── Robustness summary table ───────────────────────────────────────────────
+    st.markdown("**Robustness Summary Table**")
+
+    def _colour_robustness(val):
+        if not isinstance(val, (int, float)):
+            return ""
+        if val >= 90:
+            return "background-color: #d4edda; color: #155724"
+        elif val >= 75:
+            return "background-color: #fff3cd; color: #856404"
+        elif val >= 55:
+            return "background-color: #ffe0b2; color: #6d4c00"
+        else:
+            return "background-color: #f8d7da; color: #721c24"
+
+    styled_summary = (
+        summary_df.style
+        .map(_colour_robustness, subset=["Robustness Score"])
+        .format({"% Drop": "{:.2f}%", "Robustness Score": "{:.2f}"})
+    )
+    st.dataframe(styled_summary, use_container_width=True)
+
+    # ── Tier badges ───────────────────────────────────────────────────────────
+    st.markdown("**Robustness Tiers:**")
+    tier_cols = st.columns(len(summary_df))
+    for col, (_, row) in zip(tier_cols, summary_df.iterrows()):
+        tier = get_robustness_tier(row["Robustness Score"])
+        col.metric(
+            label=row["Model"],
+            value=tier,
+            delta=f"-{row['% Drop']:.1f}% drop",
+            delta_color="inverse"
+        )
+
+    # ── Download ──────────────────────────────────────────────────────────────
+    deg_csv = summary_df.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        "Download Degradation Summary CSV",
+        deg_csv,
+        file_name="degradation_summary.csv",
+        mime="text/csv"
+    )
+
 # ─── Confusion Matrix (outside button block) ───────────────────────────────────
 if st.session_state.sim_done and st.session_state.trained_models is not None:
 
     st.markdown("---")
-    st.subheader("Confusion Matrices — Clean Baseline vs Max Distortion")
+    st.subheader("Confusion Matrices -- Clean Baseline vs Max Distortion")
 
     with st.expander("What is this?", expanded=False):
         st.markdown(
-            "Each model is shown two confusion matrices side by side — "
+            "Each model is shown two confusion matrices side by side -- "
             "**clean baseline** (left) and **max distortion** (right). "
             "Each cell shows the raw count and row-normalised percentage. "
-            "Accuracy is shown below each matrix. "
-            "Use this to see exactly which classes get confused as distortion increases."
+            "Accuracy is shown below each matrix."
         )
 
     with st.spinner("Computing confusion matrices..."):
@@ -666,14 +745,14 @@ if st.session_state.sim_done and st.session_state.trained_models is not None:
     st.session_state.fig_confusion = cm_fig
     plt.close(cm_fig)
 
-    # Summary cards — accuracy at clean vs distorted per model
+    # ── Accuracy summary cards ────────────────────────────────────────────────
     st.markdown("**Accuracy Summary: Clean vs Max Distortion**")
     valid = {k: v for k, v in cm_results.items() if "error" not in v}
     if valid:
         cols = st.columns(len(valid))
         for col, (name, data) in zip(cols, valid.items()):
-            cm_clean = data["clean"]
-            cm_dist  = data["distorted"]
+            cm_clean  = data["clean"]
+            cm_dist   = data["distorted"]
             acc_clean = np.trace(cm_clean) / (cm_clean.sum() + 1e-9)
             acc_dist  = np.trace(cm_dist)  / (cm_dist.sum()  + 1e-9)
             drop      = acc_clean - acc_dist
@@ -698,7 +777,7 @@ if st.session_state.sim_done and st.session_state.rel_df is not None:
     with st.expander("What is this?", expanded=False):
         st.markdown(
             "Defines a **reliability threshold** and finds the exact distortion level "
-            "where each model crosses it — the **reliability horizon**.\n\n"
+            "where each model crosses it -- the **reliability horizon**.\n\n"
             "- Green zones = safe operating range\n"
             "- Red zones = model should not be trusted\n\n"
             "**Tip:** The threshold is auto-suggested at 80% of the best model's clean "
@@ -768,17 +847,16 @@ if st.session_state.sim_done and st.session_state.rel_df is not None:
     )
     st.dataframe(styled_horizons, use_container_width=True)
 
-    verdict_md = get_reliability_verdict(horizons_df, snap_max)
-
-    # Show best model prominently
+    # Best model banner
     if not horizons_df.empty:
         best = horizons_df.iloc[0]
         st.success(
-            f"🏆 **Recommended Model: {best['Model']}** — "
+            f"**Recommended Model: {best['Model']}** -- "
             f"Reliable for {best['Reliable Range (%)']:.1f}% of the distortion range "
             f"(until level `{best['Horizon Level']:.3f}`)"
         )
 
+    verdict_md = get_reliability_verdict(horizons_df, snap_max)
     st.markdown(verdict_md)
 
     rel_csv = horizons_df.to_csv(index=False).encode("utf-8")
@@ -807,6 +885,8 @@ if st.session_state.sim_done and st.session_state.rel_df is not None:
             reliability_threshold=reliability_threshold,
             reliability_metric=reliability_metric,
             fig_confusion=st.session_state.fig_confusion,
+            fig_degradation=st.session_state.fig_degradation,
+            summary_df=st.session_state.summary_df,
         )
         st.session_state.run_saved    = True
         st.session_state.last_run_id  = run_id
@@ -832,8 +912,8 @@ else:
             "selected_models", ["Random Forest", "Logistic Regression", "SVM"]
         )
         with st.expander(
-            f"Run #{run['run_id']:03d} — {run['timestamp']} — "
-            f"Dataset: {run['dataset']} — "
+            f"Run #{run['run_id']:03d} -- {run['timestamp']} -- "
+            f"Dataset: {run['dataset']} -- "
             f"Models: {', '.join(models_used)}"
         ):
             col1, col2, col3, col4 = st.columns(4)
@@ -856,11 +936,26 @@ else:
                 st.markdown("**Per-Distortion Analysis Chart:**")
                 st.image(run["_analysis_png_path"], use_column_width=True)
 
-            if (run.get("_confusion_png_path")
-                    and os.path.exists(run["_confusion_png_path"])):
+            if run.get("_degradation_png_path") and os.path.exists(run["_degradation_png_path"]):
+                st.markdown("**Degradation Rate Analysis:**")
+                st.image(run["_degradation_png_path"], use_column_width=True)
+
+            if run.get("_confusion_png_path") and os.path.exists(run["_confusion_png_path"]):
                 st.markdown("**Confusion Matrices:**")
                 st.image(run["_confusion_png_path"], use_column_width=True)
 
+            if run.get("_reliability_png_path") and os.path.exists(run["_reliability_png_path"]):
+                st.markdown("**Reliability Horizon Chart:**")
+                st.image(run["_reliability_png_path"], use_column_width=True)
+
+            # Degradation summary from JSON
+            deg_data = run.get("degradation", [])
+            if deg_data:
+                st.markdown("**Degradation Summary:**")
+                deg_history = pd.DataFrame(deg_data)
+                st.dataframe(deg_history, use_container_width=True)
+
+            # Reliability summary from JSON
             rel_data = run.get("reliability", {})
             if rel_data and rel_data.get("horizons"):
                 st.markdown(
@@ -893,6 +988,7 @@ else:
                         delta_color="inverse"
                     )
 
+            # Simulation results table
             rows      = []
             lvls      = run["levels"]
             rf_res_h  = run["results"]["random_forest"]
