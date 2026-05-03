@@ -48,7 +48,7 @@ def compute_degradation(rel_df, metric="accuracy"):
         deg_rate    = abs_drop / (level_range + 1e-9)
 
         # Robustness score: area under performance curve normalised to 0-100
-        area              = np.trapz(values, levels)
+        area              = np.trapezoid(values, levels)
         max_possible_area = baseline * level_range
         robustness_score  = (area / (max_possible_area + 1e-9)) * 100 if max_possible_area > 0 else 100.0
         robustness_score  = min(robustness_score, 100.0)
