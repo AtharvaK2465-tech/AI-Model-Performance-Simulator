@@ -10,19 +10,31 @@ Simulate how ML classification models degrade under real-world data distortions 
 
 ![per_distortion](per_distortion.png)
 
-## ⏱️ Reliability Horizon Chart
+## 📉 Degradation Rate Analysis
 
-![reliability](reliability.png)
+![degradation](degradation_analysis.png)
 
 ## 🔲 Confusion Matrices — Clean vs Max Distortion
 
 ![confusion_matrices](confusion_matrices.png)
 
+## ⏱️ Reliability Horizon Chart
+
+![reliability](reliability.png)
+
 ---
 
 ## What it does
 
-Trains up to **7 ML models** on clean data, then evaluates them across increasing distortion levels. Tracks **6 metrics** at each level, produces a **2×3 comparison chart**, runs a **per-distortion analysis** showing which distortion type hurts each model the most, computes a **reliability horizon** — the exact distortion level at which each model becomes untrustworthy — and renders **confusion matrices** comparing each model's clean vs max-distortion classification behaviour. Every run is saved locally with charts, metrics, and reliability data.
+Trains up to **7 ML models** on clean data, then evaluates them across increasing distortion levels. Tracks **6 metrics** at each level and produces:
+
+- A **2×3 comparison chart** of all metrics vs distortion level
+- A **per-distortion analysis** showing which distortion type hurts each model the most
+- A **degradation rate analysis** showing how fast each model degrades, with robustness scores and tier badges
+- **Confusion matrices** comparing each model's clean vs max-distortion classification behaviour
+- A **reliability horizon** — the exact distortion level at which each model becomes untrustworthy
+
+Every run is saved locally with charts, metrics, and all analysis data.
 
 ---
 
@@ -94,6 +106,40 @@ Trains up to **7 ML models** on clean data, then evaluates them across increasin
 
 ---
 
+## 📉 Degradation Rate Analysis
+
+Shows how fast each model degrades as distortion increases.
+
+### Metrics computed per model
+
+| Metric | Description |
+|---|---|
+| Baseline | Performance at zero distortion (clean data) |
+| Worst | Performance at maximum distortion level |
+| Abs Drop | Baseline minus Worst |
+| % Drop | Percentage of baseline performance lost |
+| Deg Rate/Level | Performance lost per unit of distortion |
+| Robustness Score | Area under performance curve, normalised 0–100 |
+
+### Robustness tiers
+
+| Score | Tier |
+|---|---|
+| 90–100 | Excellent |
+| 75–89 | Good |
+| 55–74 | Moderate |
+| 0–54 | Fragile |
+
+### Outputs
+
+- **Two-panel chart** — left: performance curves per model; right: horizontal robustness ranking bar chart with % drop annotations
+- **Colour-coded summary table** — green/yellow/orange/red by robustness score
+- **Tier badges** — `st.metric` cards showing each model's tier and % drop
+- **Metric selector** — switch between accuracy, F1, precision, recall without re-running
+- **CSV download** — degradation summary exportable
+
+---
+
 ## 🔲 Confusion Matrices
 
 Shows each model's confusion matrix at **clean baseline** (left) and **max distortion** (right) side by side.
@@ -103,15 +149,8 @@ Shows each model's confusion matrix at **clean baseline** (left) and **max disto
 - Each cell displays raw count and row-normalised percentage
 - Diagonal cells = correct predictions; off-diagonal = misclassifications
 - Accuracy shown below each matrix
-- Color intensity reflects prediction confidence per cell
-- Clean vs distorted CMs use the same class labels even if class imbalance distortion drops samples
-
-### Accuracy summary cards
-
-Below the confusion matrix chart, `st.metric` cards show:
-- Clean baseline accuracy per model
-- Accuracy drop at max distortion
-- Delta displayed as negative (red) to highlight degradation
+- Color intensity reflects prediction rate per cell
+- Accuracy summary `st.metric` cards below the chart show clean accuracy and drop at max distortion per model
 
 ---
 
@@ -141,15 +180,15 @@ The threshold is **auto-suggested at 80% of the best model's clean baseline accu
 ### Outputs
 
 - **Per-model subplots** — green shaded (safe zone) and red shaded (unreliable zone) with threshold line and horizon marker
-- **Best model banner** — green `st.success` box showing the recommended model in bold
+- **Best model banner** — green success box showing the recommended model
 - **Colour-coded Reliability Horizon Table** — Reliable Range % highlighted green/yellow/red
 - **Auto-generated verdict** — viva-ready conclusion paragraph
-- **Metric selector** — switch between accuracy, F1, precision, recall without re-running simulation
-- **CSV download** — reliability horizon table exportable for reports
+- **Metric selector** — switch between accuracy, F1, precision, recall without re-running
+- **CSV download** — reliability horizon table exportable
 
 ### Persistent widget state
 
-Changing the threshold slider or metric dropdown **does not re-run the simulation** — it recomputes from cached results instantly. The per-distortion chart metric selector works the same way.
+Changing any slider or dropdown **does not re-run the simulation** — all sections recompute from cached results instantly.
 
 ---
 
@@ -160,25 +199,20 @@ Every simulation run is automatically saved to `results/run_NNN/`:
 ```
 results/
 ├── run_001/
-│   ├── run_001.json                 # Settings, metrics, timestamps, reliability data
+│   ├── run_001.json                 # Settings, metrics, reliability + degradation data
 │   ├── results.png                  # Main 2×3 simulation chart
 │   ├── per_distortion.png           # Per-distortion bar chart
-│   ├── reliability.png              # Reliability horizon chart
+│   ├── degradation_analysis.png     # Degradation rate + robustness ranking
 │   ├── confusion_matrices.png       # Clean vs max distortion confusion matrices
+│   ├── reliability.png              # Reliability horizon chart
 │   ├── per_distortion_analysis.csv  # Per-distortion results table
+│   ├── degradation_summary.csv      # Robustness scores per model
 │   └── reliability_horizons.csv     # Reliability horizon table
 ├── run_002/
 │   └── ...
 ```
 
-The **Run History** section in the Streamlit dashboard shows all past runs with:
-- Main simulation chart image
-- Per-distortion chart image
-- Reliability horizon chart image
-- Confusion matrices chart image
-- Reliability settings used (metric + threshold)
-- Reliability horizon table with most/least reliable model summary cards
-- Full simulation results table
+The **Run History** section in the Streamlit dashboard shows all past runs with all charts and tables inline.
 
 ### JSON structure
 
@@ -197,24 +231,30 @@ Each `run_NNN.json` stores:
     "logistic_regression": ["..."],
     "svm": ["..."]
   },
+  "degradation": [
+    {
+      "Rank": 1, "Model": "Random Forest",
+      "Baseline": 0.95, "Worst": 0.81,
+      "Abs Drop": 0.14, "% Drop": 14.7,
+      "Deg Rate/Level": 0.35, "Robustness Score": 91.2
+    }
+  ],
   "reliability": {
     "threshold": 0.75,
     "metric": "accuracy",
     "horizons": [
       {
-        "Model": "Random Forest",
-        "Baseline": 0.95,
-        "Horizon Level": 0.38,
-        "Reliable Range (%)": 95.0,
-        "Status": "Always Reliable",
-        "Rank": 1
+        "Model": "Random Forest", "Baseline": 0.95,
+        "Horizon Level": 0.38, "Reliable Range (%)": 95.0,
+        "Status": "Always Reliable", "Rank": 1
       }
     ]
   },
   "_png_path": "results/run_001/results.png",
   "_analysis_png_path": "results/run_001/per_distortion.png",
-  "_reliability_png_path": "results/run_001/reliability.png",
-  "_confusion_png_path": "results/run_001/confusion_matrices.png"
+  "_degradation_png_path": "results/run_001/degradation_analysis.png",
+  "_confusion_png_path": "results/run_001/confusion_matrices.png",
+  "_reliability_png_path": "results/run_001/reliability.png"
 }
 ```
 
@@ -279,10 +319,11 @@ AI-Model-Performance-Simulator/
 ├── model.py                       # 7 models + dataset loading + colors/markers
 ├── distortions.py                 # 8 distortion functions
 ├── distortion_analysis.py         # Per-distortion analysis engine
-├── evaluation.py                  # 6 metrics — accuracy, precision, recall, F1, ROC-AUC, confidence
+├── evaluation.py                  # 6 metrics
 ├── visualization.py               # 2×3 metrics chart
-├── reliability_analysis.py        # Reliability horizon tracker
+├── degradation_analysis.py        # Degradation rate + robustness scoring
 ├── confusion_matrix_analysis.py   # Clean vs max distortion confusion matrices
+├── reliability_analysis.py        # Reliability horizon tracker
 ├── run_logger.py                  # Run history — save + load (JSON + PNG + CSV)
 ├── test_simulator.py              # Unit tests (7/7 passing)
 ├── requirements.txt
@@ -292,9 +333,11 @@ AI-Model-Performance-Simulator/
         ├── run_NNN.json
         ├── results.png
         ├── per_distortion.png
-        ├── reliability.png
+        ├── degradation_analysis.png
         ├── confusion_matrices.png
+        ├── reliability.png
         ├── per_distortion_analysis.csv
+        ├── degradation_summary.csv
         └── reliability_horizons.csv
 ```
 
@@ -316,16 +359,19 @@ xgboost
 ## Key Design Decisions
 
 **Why session state for charts?**
-Streamlit reruns the entire script on every widget interaction. Without `st.session_state`, changing the metric dropdown or reliability threshold would clear all simulation results and show a blank screen. All simulation outputs are stored in session state after a run, so sliders and dropdowns update charts instantly without re-training models.
+Streamlit reruns the entire script on every widget interaction. Without `st.session_state`, changing any dropdown or slider would clear all simulation results. All outputs are stored in session state so widgets update charts instantly without re-training.
 
 **Why auto-suggest the reliability threshold?**
-A fixed default of 0.75 fails on hard datasets where even the best model scores 0.50 at baseline — every model would be marked "Below Threshold at Baseline" and the analysis would be meaningless. Auto-suggesting 80% of the best baseline makes the threshold dataset-aware.
+A fixed default of 0.75 fails on hard datasets where even the best model scores 0.50 at baseline. Auto-suggesting 80% of the best baseline makes the threshold always meaningful and dataset-aware.
 
 **Why interpolate the horizon?**
-A coarse distortion grid (e.g. 5 levels from 0 to 0.4) means a model might be fine at 0.3 and fail at 0.4, but the true crossing point is somewhere between. Linear interpolation gives a more precise horizon level.
+A coarse distortion grid means the true crossing point is between two measured levels. Linear interpolation gives a precise horizon level rather than just reporting the last known good level.
 
 **Why XGBoost?**
-XGBoost consistently outperforms standard Gradient Boosting on tabular data due to regularisation, parallelised tree building, and better handling of sparse features. It serves as a strong baseline for comparing ensemble robustness under distortion.
+XGBoost consistently outperforms standard Gradient Boosting on tabular data due to regularisation and parallelised tree building. It serves as a strong ensemble baseline for robustness comparison.
+
+**Why area under the curve for robustness score?**
+A model that degrades slowly across many levels is more robust than one that holds well until suddenly collapsing. AUC captures the entire degradation trajectory, not just the endpoint, making it a fairer robustness measure than % drop alone.
 
 **Why confusion matrices at max distortion only?**
-Showing every distortion level would produce too many matrices to be readable. Clean baseline vs max distortion gives the clearest before/after picture of how class boundaries collapse under stress. The accuracy delta cards below the matrices quantify the degradation at a glance.
+Showing every distortion level would produce too many matrices to be readable. Clean baseline vs max distortion gives the clearest before/after picture of how class boundaries collapse under stress.
