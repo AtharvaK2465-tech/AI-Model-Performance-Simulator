@@ -22,6 +22,10 @@ Simulate how ML classification models degrade under real-world data distortions 
 
 ![reliability](reliability.png)
 
+## 🏆 Model Recommendation Dashboard
+
+![recommendation](recommendation_dashboard.png)
+
 ---
 
 ## What it does
@@ -33,6 +37,7 @@ Trains up to **7 ML models** on clean data, then evaluates them across increasin
 - A **degradation rate analysis** showing how fast each model degrades, with robustness scores and tier badges
 - **Confusion matrices** comparing each model's clean vs max-distortion classification behaviour
 - A **reliability horizon** — the exact distortion level at which each model becomes untrustworthy
+- A **model recommendation engine** — composite scoring with adjustable weights across robustness, peak accuracy, and stability, with radar chart, bar chart, and top-3 trajectory plots
 
 Every run is saved locally with charts, metrics, and all analysis data.
 
@@ -192,6 +197,31 @@ Changing any slider or dropdown **does not re-run the simulation** — all secti
 
 ---
 
+## 🏆 Model Recommendation Engine
+
+Answers the question: **"Which model should I actually deploy?"**
+
+Produces a **composite score** by combining three sub-scores with adjustable weights:
+
+| Sub-score | What it measures | Default weight |
+|---|---|---|
+| Robustness Score | AUC under accuracy curve, normalised 0–100 | 40% |
+| Peak Accuracy | Best accuracy achieved across all distortion levels | 35% |
+| Stability Score | 1 − std(accuracy), higher = more consistent | 25% |
+
+Weights are user-adjustable via sliders and automatically normalised to sum to 1.0.
+
+### Outputs
+
+- **Radar chart** — all models plotted on 4 axes: Robustness / Peak Accuracy / Stability / Composite Score
+- **Composite score bar chart** — ranked bar chart with gold border on top pick
+- **Top-3 trajectory mini-plots** — Accuracy, F1, and ROC-AUC vs distortion level for the three highest-scoring models
+- **Composite score table** — all sub-scores and final composite score per model
+- **Top recommendation banner** — green success card naming the best model with its scores
+- **CSV download** — full recommendation table exportable
+
+---
+
 ## Run History
 
 Every simulation run is automatically saved to `results/run_NNN/`:
@@ -199,15 +229,17 @@ Every simulation run is automatically saved to `results/run_NNN/`:
 ```
 results/
 ├── run_001/
-│   ├── run_001.json                 # Settings, metrics, reliability + degradation data
-│   ├── results.png                  # Main 2×3 simulation chart
-│   ├── per_distortion.png           # Per-distortion bar chart
-│   ├── degradation_analysis.png     # Degradation rate + robustness ranking
-│   ├── confusion_matrices.png       # Clean vs max distortion confusion matrices
-│   ├── reliability.png              # Reliability horizon chart
-│   ├── per_distortion_analysis.csv  # Per-distortion results table
-│   ├── degradation_summary.csv      # Robustness scores per model
-│   └── reliability_horizons.csv     # Reliability horizon table
+│   ├── run_001.json                   # Settings, metrics, reliability, degradation + recommendation data
+│   ├── results.png                    # Main 2×3 simulation chart
+│   ├── per_distortion.png             # Per-distortion bar chart
+│   ├── degradation_analysis.png       # Degradation rate + robustness ranking
+│   ├── confusion_matrices.png         # Clean vs max distortion confusion matrices
+│   ├── reliability.png                # Reliability horizon chart
+│   ├── recommendation_dashboard.png   # Recommendation engine — radar + bar + trajectories
+│   ├── per_distortion_analysis.csv    # Per-distortion results table
+│   ├── degradation_summary.csv        # Robustness scores per model
+│   ├── reliability_horizons.csv       # Reliability horizon table
+│   └── model_recommendation.csv      # Composite scores per model
 ├── run_002/
 │   └── ...
 ```
@@ -250,11 +282,21 @@ Each `run_NNN.json` stores:
       }
     ]
   },
+  "recommendation": [
+    {
+      "Model": "Random Forest",
+      "Robustness Score": 91.2,
+      "Peak Accuracy": 0.967,
+      "Stability Score": 0.921,
+      "Composite Score": 0.934
+    }
+  ],
   "_png_path": "results/run_001/results.png",
   "_analysis_png_path": "results/run_001/per_distortion.png",
   "_degradation_png_path": "results/run_001/degradation_analysis.png",
   "_confusion_png_path": "results/run_001/confusion_matrices.png",
-  "_reliability_png_path": "results/run_001/reliability.png"
+  "_reliability_png_path": "results/run_001/reliability.png",
+  "_recommendation_png_path": "results/run_001/recommendation_dashboard.png"
 }
 ```
 
@@ -263,7 +305,7 @@ Each `run_NNN.json` stores:
 ## Setup
 
 ```bash
-git clone https://github.com/n-a-n-d-a-n/AI-Model-Performance-Simulator.git
+git clone https://github.com/AtharvaK2465-tech/AI-Model-Performance-Simulator.git
 cd AI-Model-Performance-Simulator
 pip install -r requirements.txt
 ```
@@ -324,6 +366,7 @@ AI-Model-Performance-Simulator/
 ├── degradation_analysis.py        # Degradation rate + robustness scoring
 ├── confusion_matrix_analysis.py   # Clean vs max distortion confusion matrices
 ├── reliability_analysis.py        # Reliability horizon tracker
+├── recommendation_engine.py       # Composite scoring + radar/bar/trajectory charts
 ├── run_logger.py                  # Run history — save + load (JSON + PNG + CSV)
 ├── test_simulator.py              # Unit tests (7/7 passing)
 ├── requirements.txt
@@ -336,9 +379,11 @@ AI-Model-Performance-Simulator/
         ├── degradation_analysis.png
         ├── confusion_matrices.png
         ├── reliability.png
+        ├── recommendation_dashboard.png
         ├── per_distortion_analysis.csv
         ├── degradation_summary.csv
-        └── reliability_horizons.csv
+        ├── reliability_horizons.csv
+        └── model_recommendation.csv
 ```
 
 ---
@@ -375,3 +420,6 @@ A model that degrades slowly across many levels is more robust than one that hol
 
 **Why confusion matrices at max distortion only?**
 Showing every distortion level would produce too many matrices to be readable. Clean baseline vs max distortion gives the clearest before/after picture of how class boundaries collapse under stress.
+
+**Why a composite score for recommendation?**
+No single metric captures deployment readiness. A model with high peak accuracy but poor stability is risky in production. The composite score — robustness 40%, peak accuracy 35%, stability 25% — balances all three concerns, with user-adjustable weights to match different deployment priorities.
