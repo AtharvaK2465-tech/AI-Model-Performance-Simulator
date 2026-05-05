@@ -331,7 +331,7 @@ pydantic
 | Session | Status | What was built |
 |---|---|---|
 | Session 1 | ✅ Complete | FastAPI backend — all 4 routes, core wrappers |
-| Session 2 | 🔨 In progress | React frontend Steps 1–3, SSE progress bar |
+| Session 2 | ✅ Complete | React frontend Steps 1–3, Tailwind dark theme, SSE progress bar |
 | Session 3 | ⏳ Pending | Results charts, Analysis tabs, Recommend page |
 | Session 4 | ⏳ Pending | History page, Render deployment |
 
