@@ -1,0 +1,179 @@
+{
+  "run_id": 26,
+  "timestamp": "2026-05-03 00:21:30",
+  "dataset": "building_metadata.csv",
+  "settings": {
+    "max_distortion_level": 0.4,
+    "num_levels": 5,
+    "test_size": 0.2,
+    "scale_data": true,
+    "random_seed": 42,
+    "selected_models": [
+      "Random Forest"
+    ]
+  },
+  "distortions_used": {
+    "gaussian_noise": true,
+    "covariate_drift": true,
+    "distribution_shift": true,
+    "class_imbalance": true,
+    "missing_values": true,
+    "label_noise": true,
+    "outlier_injection": true,
+    "feature_corruption": true
+  },
+  "levels": [
+    0.0,
+    0.1,
+    0.2,
+    0.30000000000000004,
+    0.4
+  ],
+  "results": {
+    "random_forest": [
+      {
+        "accuracy": 0.7446808510638298,
+        "precision": 0.8,
+        "recall": 0.6597222222222222,
+        "f1": 0.6832750582750583,
+        "roc_auc": 0.9197935086943707,
+        "confidence": 0.7838297872340426
+      },
+      {
+        "accuracy": 0.37209302325581395,
+        "precision": 0.5258152173913043,
+        "recall": 0.39482600732600737,
+        "f1": 0.40471857094708463,
+        "roc_auc": 0.5880781507140203,
+        "confidence": 0.5795348837209303
+      },
+      {
+        "accuracy": 0.375,
+        "precision": 0.46944444444444444,
+        "recall": 0.3541666666666667,
+        "f1": 0.3386904761904762,
+        "roc_auc": 0.6389399509803921,
+        "confidence": 0.5695
+      },
+      {
+        "accuracy": 0.35135135135135137,
+        "precision": 0.509469696969697,
+        "recall": 0.2603174603174603,
+        "f1": 0.2902046783625731,
+        "roc_auc": 0.5231287855054303,
+        "confidence": 0.5713513513513513
+      },
+      {
+        "accuracy": 0.1875,
+        "precision": 0.3383458646616541,
+        "recall": 0.2220238095238095,
+        "f1": 0.1536276223776224,
+        "roc_auc": 0.5435138574660633,
+        "confidence": 0.610625
+      }
+    ],
+    "logistic_regression": [
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      }
+    ],
+    "svm": [
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      }
+    ]
+  },
+  "reliability": {
+    "threshold": 0.6,
+    "metric": "accuracy",
+    "horizons": [
+      {
+        "Model": "Random Forest",
+        "Baseline": 0.7447,
+        "Threshold": 0.6,
+        "Horizon Level": 0.0388,
+        "Reliable Range (%)": 9.7,
+        "Status": "\ud83d\udd34 Degrades Early",
+        "Rank": 1
+      }
+    ]
+  },
+  "_png_path": "results\\run_026\\results.png",
+  "_analysis_png_path": "results\\run_026\\per_distortion.png",
+  "_reliability_png_path": "results\\run_026\\reliability.png",
+  "_confusion_png_path": "results\\run_026\\confusion_matrices.png"
+}

@@ -1,0 +1,9 @@
+Distortion,RF Acc,RF F1,RF AUC
+Gaussian Noise,0.66,0.669,0.903
+Covariate Drift,0.447,0.401,0.709
+Distribution Shift,0.489,0.448,0.846
+Class Imbalance,0.758,0.547,0.917
+Missing Values,0.574,0.52,0.806
+Label Noise,0.489,0.419,0.696
+Outlier Injection,0.596,0.484,0.785
+Feature Corruption,0.404,0.389,0.793

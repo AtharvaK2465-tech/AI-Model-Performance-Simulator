@@ -1,0 +1,8 @@
+Model,Baseline,Threshold,Horizon Level,Reliable Range (%),Status,Rank
+Random Forest,0.0,0.4,0.0,0.0,🔴 Below Threshold at Baseline,1
+Logistic Regression,0.1667,0.4,0.0,0.0,🔴 Below Threshold at Baseline,2
+SVM,0.1667,0.4,0.0,0.0,🔴 Below Threshold at Baseline,3
+Decision Tree,0.0,0.4,0.0,0.0,🔴 Below Threshold at Baseline,4
+KNN,0.1667,0.4,0.0,0.0,🔴 Below Threshold at Baseline,5
+Gradient Boosting,0.0,0.4,0.0,0.0,🔴 Below Threshold at Baseline,6
+XGBoost,0.1667,0.4,0.0,0.0,🔴 Below Threshold at Baseline,7

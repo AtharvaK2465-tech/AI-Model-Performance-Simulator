@@ -1,0 +1,339 @@
+{
+  "run_id": 31,
+  "timestamp": "2026-05-05 17:00:31",
+  "dataset": "irrigation_prediction.csv",
+  "settings": {
+    "max_distortion_level": 0.5,
+    "num_levels": 6,
+    "test_size": 0.25,
+    "scale_data": true,
+    "random_seed": 51,
+    "selected_models": [
+      "Random Forest",
+      "Logistic Regression",
+      "SVM",
+      "Decision Tree",
+      "KNN",
+      "Gradient Boosting",
+      "XGBoost"
+    ]
+  },
+  "distortions_used": {
+    "gaussian_noise": true,
+    "covariate_drift": true,
+    "distribution_shift": true,
+    "class_imbalance": true,
+    "missing_values": true,
+    "label_noise": true,
+    "outlier_injection": true,
+    "feature_corruption": true
+  },
+  "levels": [
+    0.0,
+    0.1,
+    0.2,
+    0.30000000000000004,
+    0.4,
+    0.5
+  ],
+  "results": {
+    "random_forest": [
+      {
+        "accuracy": 0.6392,
+        "precision": 0.6396655736063481,
+        "recall": 0.6392651221671037,
+        "f1": 0.6389633910479572,
+        "roc_auc": 0.7343517498660792,
+        "confidence": 0.6202
+      },
+      {
+        "accuracy": 0.584421052631579,
+        "precision": 0.5838473621700317,
+        "recall": 0.5840613543538289,
+        "f1": 0.5837965214417699,
+        "roc_auc": 0.6248611176314102,
+        "confidence": 0.5976926315789474
+      },
+      {
+        "accuracy": 0.5317354638260098,
+        "precision": 0.4951237783514659,
+        "recall": 0.49661320043353596,
+        "f1": 0.46907514586436744,
+        "roc_auc": 0.5046643538345038,
+        "confidence": 0.5970572569906791
+      },
+      {
+        "accuracy": 0.5461790904828879,
+        "precision": 0.4883998790078645,
+        "recall": 0.4915800027810508,
+        "f1": 0.47253683758762344,
+        "roc_auc": 0.4892092484576146,
+        "confidence": 0.5997421472105017
+      },
+      {
+        "accuracy": 0.553,
+        "precision": 0.5167412763814343,
+        "recall": 0.5162481496778545,
+        "f1": 0.5161416027295243,
+        "roc_auc": 0.4922769394631158,
+        "confidence": 0.57058
+      },
+      {
+        "accuracy": 0.630801687763713,
+        "precision": 0.49938572238353596,
+        "recall": 0.49965947524558185,
+        "f1": 0.4770751511407264,
+        "roc_auc": 0.5096674400618715,
+        "confidence": 0.6334493670886076
+      }
+    ],
+    "logistic_regression": [
+      {
+        "accuracy": 0.6024,
+        "precision": 0.605859604803838,
+        "recall": 0.6026108310383869,
+        "f1": 0.5994096087529565,
+        "roc_auc": 0.6069410959807129,
+        "confidence": 0.5698544228746004
+      },
+      {
+        "accuracy": 0.5688421052631579,
+        "precision": 0.5677010339171444,
+        "recall": 0.5677593028069532,
+        "f1": 0.5677200646144746,
+        "roc_auc": 0.5733192210352908,
+        "confidence": 0.6114943535481677
+      },
+      {
+        "accuracy": 0.48513093652907235,
+        "precision": 0.4834303572667798,
+        "recall": 0.4831808699856395,
+        "f1": 0.48214778250159307,
+        "roc_auc": 0.48244563590343736,
+        "confidence": 0.5625387463711194
+      },
+      {
+        "accuracy": 0.5185185185185185,
+        "precision": 0.5270878791957719,
+        "recall": 0.5279829514267522,
+        "f1": 0.5169897662530436,
+        "roc_auc": 0.5323996992074005,
+        "confidence": 0.5614104949254956
+      },
+      {
+        "accuracy": 0.495,
+        "precision": 0.4905959800755926,
+        "recall": 0.4899759764951723,
+        "f1": 0.484457674995993,
+        "roc_auc": 0.4913617837372292,
+        "confidence": 0.5791285716510698
+      },
+      {
+        "accuracy": 0.5617088607594937,
+        "precision": 0.5205902830046666,
+        "recall": 0.5224553951049086,
+        "f1": 0.5189948928300268,
+        "roc_auc": 0.5200505592686221,
+        "confidence": 0.6238931411745569
+      }
+    ],
+    "svm": [
+      {
+        "accuracy": 0.6472,
+        "precision": 0.6517257485116724,
+        "recall": 0.647403409043636,
+        "f1": 0.6447408106289683,
+        "roc_auc": 0.6987633848770969,
+        "confidence": 0.6389565624438218
+      },
+      {
+        "accuracy": 0.5966315789473684,
+        "precision": 0.5958824476430447,
+        "recall": 0.5898097684985625,
+        "f1": 0.5865425013047467,
+        "roc_auc": 0.6279816141794453,
+        "confidence": 0.624304552894697
+      },
+      {
+        "accuracy": 0.550821127385708,
+        "precision": 0.5129864831134919,
+        "recall": 0.5064970358499659,
+        "f1": 0.4554175543857302,
+        "roc_auc": 0.49750132478215137,
+        "confidence": 0.5874109509585805
+      },
+      {
+        "accuracy": 0.5766526019690577,
+        "precision": 0.5174574047217372,
+        "recall": 0.5097126369484554,
+        "f1": 0.4751552177271792,
+        "roc_auc": 0.5102825693981952,
+        "confidence": 0.5629234400134476
+      },
+      {
+        "accuracy": 0.589,
+        "precision": 0.5024941386275686,
+        "recall": 0.5013612607911001,
+        "f1": 0.46924939467312343,
+        "roc_auc": 0.48039218825206853,
+        "confidence": 0.5373493014021469
+      },
+      {
+        "accuracy": 0.6566455696202531,
+        "precision": 0.48480418217260324,
+        "recall": 0.49604067827913795,
+        "f1": 0.4401714460659251,
+        "roc_auc": 0.49709688217843484,
+        "confidence": 0.5524777695805896
+      }
+    ]
+  },
+  "reliability": {
+    "threshold": 0.55,
+    "metric": "accuracy",
+    "horizons": [
+      {
+        "Model": "SVM",
+        "Baseline": 0.6472,
+        "Threshold": 0.55,
+        "Horizon Level": 0.5,
+        "Reliable Range (%)": 100.0,
+        "Status": "\ud83d\udfe2 Always Reliable",
+        "Rank": 1
+      },
+      {
+        "Model": "Gradient Boosting",
+        "Baseline": 0.658,
+        "Threshold": 0.55,
+        "Horizon Level": 0.1888,
+        "Reliable Range (%)": 37.8,
+        "Status": "\ud83d\udd34 Degrades Early",
+        "Rank": 2
+      },
+      {
+        "Model": "Decision Tree",
+        "Baseline": 0.65,
+        "Threshold": 0.55,
+        "Horizon Level": 0.172,
+        "Reliable Range (%)": 34.4,
+        "Status": "\ud83d\udd34 Degrades Early",
+        "Rank": 3
+      },
+      {
+        "Model": "Random Forest",
+        "Baseline": 0.6392,
+        "Threshold": 0.55,
+        "Horizon Level": 0.1653,
+        "Reliable Range (%)": 33.1,
+        "Status": "\ud83d\udd34 Degrades Early",
+        "Rank": 4
+      },
+      {
+        "Model": "Logistic Regression",
+        "Baseline": 0.6024,
+        "Threshold": 0.55,
+        "Horizon Level": 0.1225,
+        "Reliable Range (%)": 24.5,
+        "Status": "\ud83d\udd34 Degrades Early",
+        "Rank": 5
+      },
+      {
+        "Model": "XGBoost",
+        "Baseline": 0.6436,
+        "Threshold": 0.55,
+        "Horizon Level": 0.0813,
+        "Reliable Range (%)": 16.3,
+        "Status": "\ud83d\udd34 Degrades Early",
+        "Rank": 6
+      },
+      {
+        "Model": "KNN",
+        "Baseline": 0.5812,
+        "Threshold": 0.55,
+        "Horizon Level": 0.0777,
+        "Reliable Range (%)": 15.5,
+        "Status": "\ud83d\udd34 Degrades Early",
+        "Rank": 7
+      }
+    ]
+  },
+  "degradation": [
+    {
+      "Rank": 1,
+      "Model": "SVM",
+      "Baseline": 0.6472,
+      "Worst": 0.6566,
+      "Abs Drop": -0.0094,
+      "% Drop": -1.46,
+      "Deg Rate/Level": -0.0189,
+      "Robustness Score": 91.63
+    },
+    {
+      "Rank": 2,
+      "Model": "KNN",
+      "Baseline": 0.5812,
+      "Worst": 0.5338,
+      "Abs Drop": 0.0474,
+      "% Drop": 8.16,
+      "Deg Rate/Level": 0.0949,
+      "Robustness Score": 91.43
+    },
+    {
+      "Rank": 3,
+      "Model": "Gradient Boosting",
+      "Baseline": 0.658,
+      "Worst": 0.6677,
+      "Abs Drop": -0.0097,
+      "% Drop": -1.48,
+      "Deg Rate/Level": -0.0194,
+      "Robustness Score": 90.09
+    },
+    {
+      "Rank": 4,
+      "Model": "Random Forest",
+      "Baseline": 0.6392,
+      "Worst": 0.6308,
+      "Abs Drop": 0.0084,
+      "% Drop": 1.31,
+      "Deg Rate/Level": 0.0168,
+      "Robustness Score": 89.18
+    },
+    {
+      "Rank": 5,
+      "Model": "Logistic Regression",
+      "Baseline": 0.6024,
+      "Worst": 0.5617,
+      "Abs Drop": 0.0407,
+      "% Drop": 6.75,
+      "Deg Rate/Level": 0.0814,
+      "Robustness Score": 87.97
+    },
+    {
+      "Rank": 6,
+      "Model": "Decision Tree",
+      "Baseline": 0.65,
+      "Worst": 0.6503,
+      "Abs Drop": -0.0003,
+      "% Drop": -0.05,
+      "Deg Rate/Level": -0.0006,
+      "Robustness Score": 87.84
+    },
+    {
+      "Rank": 7,
+      "Model": "XGBoost",
+      "Baseline": 0.6436,
+      "Worst": 0.6007,
+      "Abs Drop": 0.0429,
+      "% Drop": 6.66,
+      "Deg Rate/Level": 0.0857,
+      "Robustness Score": 86.83
+    }
+  ],
+  "recommendation": {},
+  "_png_path": "results\\run_031\\results.png",
+  "_analysis_png_path": "results\\run_031\\per_distortion.png",
+  "_reliability_png_path": "results\\run_031\\reliability.png",
+  "_confusion_png_path": "results\\run_031\\confusion_matrices.png",
+  "_degradation_png_path": "results\\run_031\\degradation_analysis.png",
+  "_recommendation_png_path": null
+}

@@ -1,0 +1,7 @@
+Model,Baseline,Threshold,Horizon Level,Reliable Range (%),Status,Rank
+SVM,0.964,0.75,0.035,17.5,🔴 Degrades Early,1
+Random Forest,1.0,0.75,0.0348,17.4,🔴 Degrades Early,2
+Gradient Boosting,1.0,0.75,0.0348,17.4,🔴 Degrades Early,3
+Decision Tree,1.0,0.75,0.0348,17.4,🔴 Degrades Early,4
+KNN,0.8987,0.75,0.0347,17.4,🔴 Degrades Early,5
+Logistic Regression,0.9893,0.75,0.0339,17.0,🔴 Degrades Early,6

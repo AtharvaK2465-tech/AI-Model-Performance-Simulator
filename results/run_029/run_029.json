@@ -1,0 +1,204 @@
+{
+  "run_id": 29,
+  "timestamp": "2026-05-05 09:58:30",
+  "dataset": "irrigation_prediction.csv",
+  "settings": {
+    "max_distortion_level": 0.1,
+    "num_levels": 3,
+    "test_size": 0.1,
+    "scale_data": true,
+    "random_seed": 12,
+    "selected_models": [
+      "Decision Tree",
+      "KNN",
+      "Gradient Boosting",
+      "XGBoost"
+    ]
+  },
+  "distortions_used": {
+    "gaussian_noise": false,
+    "covariate_drift": false,
+    "distribution_shift": false,
+    "class_imbalance": false,
+    "missing_values": true,
+    "label_noise": true,
+    "outlier_injection": true,
+    "feature_corruption": true
+  },
+  "levels": [
+    0.0,
+    0.05,
+    0.1
+  ],
+  "results": {
+    "random_forest": [
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      }
+    ],
+    "logistic_regression": [
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      }
+    ],
+    "svm": [
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      }
+    ]
+  },
+  "reliability": {
+    "threshold": 0.8,
+    "metric": "accuracy",
+    "horizons": [
+      {
+        "Model": "XGBoost",
+        "Baseline": 0.997,
+        "Threshold": 0.8,
+        "Horizon Level": 0.0685,
+        "Reliable Range (%)": 68.5,
+        "Status": "\ud83d\udfe1 Degrades Mid-Range",
+        "Rank": 1
+      },
+      {
+        "Model": "Decision Tree",
+        "Baseline": 0.994,
+        "Threshold": 0.8,
+        "Horizon Level": 0.0684,
+        "Reliable Range (%)": 68.4,
+        "Status": "\ud83d\udfe1 Degrades Mid-Range",
+        "Rank": 2
+      },
+      {
+        "Model": "Gradient Boosting",
+        "Baseline": 0.997,
+        "Threshold": 0.8,
+        "Horizon Level": 0.0683,
+        "Reliable Range (%)": 68.3,
+        "Status": "\ud83d\udfe1 Degrades Mid-Range",
+        "Rank": 3
+      },
+      {
+        "Model": "KNN",
+        "Baseline": 0.707,
+        "Threshold": 0.8,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 4
+      }
+    ]
+  },
+  "degradation": [
+    {
+      "Rank": 1,
+      "Model": "KNN",
+      "Baseline": 0.707,
+      "Worst": 0.593,
+      "Abs Drop": 0.114,
+      "% Drop": 16.12,
+      "Deg Rate/Level": 1.14,
+      "Robustness Score": 94.27
+    },
+    {
+      "Rank": 2,
+      "Model": "Decision Tree",
+      "Baseline": 0.994,
+      "Worst": 0.683,
+      "Abs Drop": 0.311,
+      "% Drop": 31.29,
+      "Deg Rate/Level": 3.11,
+      "Robustness Score": 85.84
+    },
+    {
+      "Rank": 3,
+      "Model": "XGBoost",
+      "Baseline": 0.997,
+      "Worst": 0.683,
+      "Abs Drop": 0.314,
+      "% Drop": 31.49,
+      "Deg Rate/Level": 3.14,
+      "Robustness Score": 85.71
+    },
+    {
+      "Rank": 4,
+      "Model": "Gradient Boosting",
+      "Baseline": 0.997,
+      "Worst": 0.682,
+      "Abs Drop": 0.315,
+      "% Drop": 31.59,
+      "Deg Rate/Level": 3.15,
+      "Robustness Score": 85.63
+    }
+  ],
+  "recommendation": {},
+  "_png_path": "results\\run_029\\results.png",
+  "_analysis_png_path": "results\\run_029\\per_distortion.png",
+  "_reliability_png_path": "results\\run_029\\reliability.png",
+  "_confusion_png_path": "results\\run_029\\confusion_matrices.png",
+  "_degradation_png_path": "results\\run_029\\degradation_analysis.png",
+  "_recommendation_png_path": null
+}

@@ -1,0 +1,2 @@
+Model,Baseline,Threshold,Horizon Level,Reliable Range (%),Status,Rank
+Random Forest,0.7447,0.6,0.0388,9.7,🔴 Degrades Early,1

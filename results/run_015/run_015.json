@@ -1,0 +1,353 @@
+{
+  "run_id": 15,
+  "timestamp": "2026-04-30 14:54:41",
+  "dataset": "A_year_of_pizza_sales_from_a_pizza_place_872_68.csv",
+  "settings": {
+    "max_distortion_level": 1.0,
+    "num_levels": 10,
+    "test_size": 0.4,
+    "scale_data": true,
+    "random_seed": 97,
+    "selected_models": [
+      "Random Forest",
+      "Logistic Regression",
+      "SVM",
+      "Decision Tree",
+      "KNN",
+      "Gradient Boosting"
+    ]
+  },
+  "distortions_used": {
+    "gaussian_noise": true,
+    "covariate_drift": true,
+    "distribution_shift": true,
+    "class_imbalance": true,
+    "missing_values": true,
+    "label_noise": true,
+    "outlier_injection": true,
+    "feature_corruption": true
+  },
+  "levels": [
+    0.0,
+    0.1111111111111111,
+    0.2222222222222222,
+    0.3333333333333333,
+    0.4444444444444444,
+    0.5555555555555556,
+    0.6666666666666666,
+    0.7777777777777777,
+    0.8888888888888888,
+    1.0
+  ],
+  "results": {
+    "random_forest": [
+      {
+        "accuracy": 0.5454545454545454,
+        "precision": 0.4083333333333333,
+        "recall": 0.41666666666666663,
+        "f1": 0.40681818181818186,
+        "roc_auc": 0.6569444444444444,
+        "confidence": 0.7027272727272726
+      },
+      {
+        "accuracy": 0.1111111111111111,
+        "precision": 0.125,
+        "recall": 0.05,
+        "f1": 0.07142857142857142,
+        "roc_auc": 0.4705357142857143,
+        "confidence": 0.64
+      },
+      {
+        "accuracy": 0.375,
+        "precision": 0.21666666666666667,
+        "recall": 0.375,
+        "f1": 0.22619047619047616,
+        "roc_auc": 0.6499255952380952,
+        "confidence": 0.6962499999999999
+      },
+      {
+        "accuracy": 0.125,
+        "precision": 0.25,
+        "recall": 0.125,
+        "f1": 0.16666666666666666,
+        "roc_auc": 0.515625,
+        "confidence": 0.62625
+      },
+      {
+        "accuracy": 0.42857142857142855,
+        "precision": 0.15,
+        "recall": 0.1875,
+        "f1": 0.16666666666666666,
+        "roc_auc": 0.44791666666666663,
+        "confidence": 0.6599999999999999
+      },
+      {
+        "accuracy": 0.42857142857142855,
+        "precision": 0.1875,
+        "recall": 0.1875,
+        "f1": 0.1875,
+        "roc_auc": 0.5208333333333334,
+        "confidence": 0.5328571428571428
+      },
+      {
+        "accuracy": 0.125,
+        "precision": 0.03125,
+        "recall": 0.25,
+        "f1": 0.05555555555555555,
+        "roc_auc": 0.4595238095238095,
+        "confidence": 0.55875
+      },
+      {
+        "accuracy": 0.125,
+        "precision": 0.08333333333333333,
+        "recall": 0.25,
+        "f1": 0.125,
+        "roc_auc": 0.49523809523809526,
+        "confidence": 0.59625
+      },
+      {
+        "accuracy": 0.14285714285714285,
+        "precision": 0.03571428571428571,
+        "recall": 0.25,
+        "f1": 0.0625,
+        "roc_auc": 0.5,
+        "confidence": 0.7199999999999999
+      },
+      {
+        "accuracy": 0.125,
+        "precision": 0.03125,
+        "recall": 0.25,
+        "f1": 0.05555555555555555,
+        "roc_auc": 0.5,
+        "confidence": 0.72
+      }
+    ],
+    "logistic_regression": [
+      {
+        "accuracy": 0.45454545454545453,
+        "precision": 0.225,
+        "recall": 0.375,
+        "f1": 0.26785714285714285,
+        "roc_auc": 0.5777777777777777,
+        "confidence": 0.5018716026960338
+      },
+      {
+        "accuracy": 0.3333333333333333,
+        "precision": 0.10714285714285714,
+        "recall": 0.15,
+        "f1": 0.125,
+        "roc_auc": 0.5026785714285714,
+        "confidence": 0.5442891218668147
+      },
+      {
+        "accuracy": 0.75,
+        "precision": 0.575,
+        "recall": 0.625,
+        "f1": 0.5555555555555555,
+        "roc_auc": 0.8087797619047619,
+        "confidence": 0.5391112368393811
+      },
+      {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "roc_auc": 0.31101190476190477,
+        "confidence": 0.530717749902166
+      },
+      {
+        "accuracy": 0.5714285714285714,
+        "precision": 0.5625,
+        "recall": 0.625,
+        "f1": 0.5166666666666666,
+        "roc_auc": 0.8125000000000001,
+        "confidence": 0.6222534260372922
+      },
+      {
+        "accuracy": 0.42857142857142855,
+        "precision": 0.15,
+        "recall": 0.1875,
+        "f1": 0.16666666666666666,
+        "roc_auc": 0.5729166666666667,
+        "confidence": 0.571190981961137
+      },
+      {
+        "accuracy": 0.625,
+        "precision": 0.15625,
+        "recall": 0.25,
+        "f1": 0.19230769230769232,
+        "roc_auc": 0.5571428571428572,
+        "confidence": 0.45066589207787977
+      },
+      {
+        "accuracy": 0.125,
+        "precision": 0.08333333333333333,
+        "recall": 0.05,
+        "f1": 0.0625,
+        "roc_auc": 0.5404761904761906,
+        "confidence": 0.482694101753044
+      },
+      {
+        "accuracy": 0.14285714285714285,
+        "precision": 0.03571428571428571,
+        "recall": 0.25,
+        "f1": 0.0625,
+        "roc_auc": 0.53125,
+        "confidence": 0.5156782110684696
+      },
+      {
+        "accuracy": 0.125,
+        "precision": 0.03125,
+        "recall": 0.25,
+        "f1": 0.05555555555555555,
+        "roc_auc": 0.5,
+        "confidence": 0.515678207480061
+      }
+    ],
+    "svm": [
+      {
+        "accuracy": 0.6363636363636364,
+        "precision": 0.32291666666666663,
+        "recall": 0.45833333333333337,
+        "f1": 0.37857142857142856,
+        "roc_auc": 0.4,
+        "confidence": 0.46295032581491574
+      },
+      {
+        "accuracy": 0.5555555555555556,
+        "precision": 0.1388888888888889,
+        "recall": 0.25,
+        "f1": 0.17857142857142858,
+        "roc_auc": 0.4035714285714286,
+        "confidence": 0.44925820166771974
+      },
+      {
+        "accuracy": 0.5,
+        "precision": 0.125,
+        "recall": 0.25,
+        "f1": 0.16666666666666666,
+        "roc_auc": 0.5401785714285714,
+        "confidence": 0.442811987284622
+      },
+      {
+        "accuracy": 0.25,
+        "precision": 0.0625,
+        "recall": 0.25,
+        "f1": 0.1,
+        "roc_auc": 0.5989583333333334,
+        "confidence": 0.4488857678088325
+      },
+      {
+        "accuracy": 0.14285714285714285,
+        "precision": 0.03571428571428571,
+        "recall": 0.25,
+        "f1": 0.0625,
+        "roc_auc": 0.7708333333333334,
+        "confidence": 0.44953786103505705
+      },
+      {
+        "accuracy": 0.5714285714285714,
+        "precision": 0.14285714285714285,
+        "recall": 0.25,
+        "f1": 0.18181818181818182,
+        "roc_auc": 0.5520833333333334,
+        "confidence": 0.4558200576680627
+      },
+      {
+        "accuracy": 0.625,
+        "precision": 0.15625,
+        "recall": 0.25,
+        "f1": 0.19230769230769232,
+        "roc_auc": 0.44285714285714284,
+        "confidence": 0.4811729860672261
+      },
+      {
+        "accuracy": 0.125,
+        "precision": 0.03125,
+        "recall": 0.25,
+        "f1": 0.05555555555555555,
+        "roc_auc": 0.530952380952381,
+        "confidence": 0.45620329143697375
+      },
+      {
+        "accuracy": 0.14285714285714285,
+        "precision": 0.03571428571428571,
+        "recall": 0.25,
+        "f1": 0.0625,
+        "roc_auc": 0.46875,
+        "confidence": 0.4385748477916637
+      },
+      {
+        "accuracy": 0.125,
+        "precision": 0.03125,
+        "recall": 0.25,
+        "f1": 0.05555555555555555,
+        "roc_auc": 0.5,
+        "confidence": 0.43857484791644546
+      }
+    ]
+  },
+  "reliability": {
+    "threshold": 0.75,
+    "metric": "accuracy",
+    "horizons": [
+      {
+        "Model": "Random Forest",
+        "Baseline": 0.5455,
+        "Threshold": 0.75,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 1
+      },
+      {
+        "Model": "Logistic Regression",
+        "Baseline": 0.4545,
+        "Threshold": 0.75,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 2
+      },
+      {
+        "Model": "SVM",
+        "Baseline": 0.6364,
+        "Threshold": 0.75,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 3
+      },
+      {
+        "Model": "Decision Tree",
+        "Baseline": 0.3636,
+        "Threshold": 0.75,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 4
+      },
+      {
+        "Model": "KNN",
+        "Baseline": 0.2727,
+        "Threshold": 0.75,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 5
+      },
+      {
+        "Model": "Gradient Boosting",
+        "Baseline": 0.2727,
+        "Threshold": 0.75,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 6
+      }
+    ]
+  },
+  "_png_path": "results\\run_015\\results.png",
+  "_analysis_png_path": "results\\run_015\\per_distortion.png",
+  "_reliability_png_path": "results\\run_015\\reliability.png"
+}

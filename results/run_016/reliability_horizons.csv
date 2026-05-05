@@ -1,0 +1,4 @@
+Model,Baseline,Threshold,Horizon Level,Reliable Range (%),Status,Rank
+Random Forest,0.0528,0.75,0.0,0.0,🔴 Below Threshold at Baseline,1
+Logistic Regression,0.0382,0.75,0.0,0.0,🔴 Below Threshold at Baseline,2
+Decision Tree,0.0401,0.75,0.0,0.0,🔴 Below Threshold at Baseline,3

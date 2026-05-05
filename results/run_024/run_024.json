@@ -1,0 +1,208 @@
+{
+  "run_id": 24,
+  "timestamp": "2026-05-02 11:28:48",
+  "dataset": "irrigation_prediction.csv",
+  "settings": {
+    "max_distortion_level": 0.4,
+    "num_levels": 5,
+    "test_size": 0.2,
+    "scale_data": true,
+    "random_seed": 42,
+    "selected_models": [
+      "Decision Tree",
+      "KNN",
+      "Gradient Boosting",
+      "XGBoost"
+    ]
+  },
+  "distortions_used": {
+    "gaussian_noise": false,
+    "covariate_drift": false,
+    "distribution_shift": false,
+    "class_imbalance": false,
+    "missing_values": true,
+    "label_noise": true,
+    "outlier_injection": true,
+    "feature_corruption": true
+  },
+  "levels": [
+    0.0,
+    0.1,
+    0.2,
+    0.30000000000000004,
+    0.4
+  ],
+  "results": {
+    "random_forest": [
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      }
+    ],
+    "logistic_regression": [
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      }
+    ],
+    "svm": [
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      }
+    ]
+  },
+  "reliability": {
+    "threshold": 0.4,
+    "metric": "accuracy",
+    "horizons": [
+      {
+        "Model": "Decision Tree",
+        "Baseline": 0.263,
+        "Threshold": 0.4,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 1
+      },
+      {
+        "Model": "KNN",
+        "Baseline": 0.253,
+        "Threshold": 0.4,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 2
+      },
+      {
+        "Model": "Gradient Boosting",
+        "Baseline": 0.261,
+        "Threshold": 0.4,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 3
+      },
+      {
+        "Model": "XGBoost",
+        "Baseline": 0.246,
+        "Threshold": 0.4,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 4
+      }
+    ]
+  },
+  "_png_path": "results\\run_024\\results.png",
+  "_analysis_png_path": "results\\run_024\\per_distortion.png",
+  "_reliability_png_path": "results\\run_024\\reliability.png"
+}

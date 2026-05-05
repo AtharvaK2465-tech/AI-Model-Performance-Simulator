@@ -1,0 +1,287 @@
+{
+  "run_id": 12,
+  "timestamp": "2026-04-30 14:31:04",
+  "dataset": "wine",
+  "settings": {
+    "max_distortion_level": 0.1,
+    "num_levels": 10,
+    "test_size": 0.3,
+    "scale_data": true,
+    "random_seed": 72,
+    "selected_models": [
+      "Decision Tree",
+      "KNN",
+      "Gradient Boosting"
+    ]
+  },
+  "distortions_used": {
+    "gaussian_noise": false,
+    "covariate_drift": false,
+    "distribution_shift": false,
+    "class_imbalance": false,
+    "missing_values": true,
+    "label_noise": true,
+    "outlier_injection": true,
+    "feature_corruption": true
+  },
+  "levels": [
+    0.0,
+    0.011111111111111112,
+    0.022222222222222223,
+    0.03333333333333333,
+    0.044444444444444446,
+    0.05555555555555556,
+    0.06666666666666667,
+    0.07777777777777778,
+    0.08888888888888889,
+    0.1
+  ],
+  "results": {
+    "random_forest": [
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      }
+    ],
+    "logistic_regression": [
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      }
+    ],
+    "svm": [
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      }
+    ]
+  }
+}

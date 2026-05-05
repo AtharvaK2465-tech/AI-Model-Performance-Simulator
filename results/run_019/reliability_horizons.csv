@@ -1,0 +1,2 @@
+Model,Baseline,Threshold,Horizon Level,Reliable Range (%),Status,Rank
+XGBoost,0.9333,0.75,0.3167,79.2,🟡 Degrades Mid-Range,1

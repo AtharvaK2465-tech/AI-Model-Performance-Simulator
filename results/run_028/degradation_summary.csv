@@ -1,0 +1,4 @@
+Rank,Model,Baseline,Worst,Abs Drop,% Drop,Deg Rate/Level,Robustness Score
+1,Logistic Regression,0.9333,0.8636,0.0697,7.47,0.1742,88.91
+2,SVM,0.9667,0.8636,0.103,10.66,0.2576,85.28
+3,Random Forest,0.9333,0.7273,0.2061,22.08,0.5152,83.98

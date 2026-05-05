@@ -1,0 +1,16 @@
+# Results - too many run folders
+results/
+backend/results/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+venv/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Env
+.env

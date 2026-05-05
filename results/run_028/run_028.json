@@ -1,0 +1,232 @@
+{
+  "run_id": 28,
+  "timestamp": "2026-05-03 13:26:49",
+  "dataset": "iris",
+  "settings": {
+    "max_distortion_level": 0.4,
+    "num_levels": 5,
+    "test_size": 0.2,
+    "scale_data": true,
+    "random_seed": 42,
+    "selected_models": [
+      "Random Forest",
+      "Logistic Regression",
+      "SVM"
+    ]
+  },
+  "distortions_used": {
+    "gaussian_noise": true,
+    "covariate_drift": true,
+    "distribution_shift": true,
+    "class_imbalance": true,
+    "missing_values": false,
+    "label_noise": false,
+    "outlier_injection": false,
+    "feature_corruption": false
+  },
+  "levels": [
+    0.0,
+    0.1,
+    0.2,
+    0.30000000000000004,
+    0.4
+  ],
+  "results": {
+    "random_forest": [
+      {
+        "accuracy": 0.9333333333333333,
+        "precision": 0.9333333333333332,
+        "recall": 0.9333333333333332,
+        "f1": 0.9333333333333332,
+        "roc_auc": 0.9866666666666667,
+        "confidence": 0.9486666666666665
+      },
+      {
+        "accuracy": 0.7857142857142857,
+        "precision": 0.8666666666666667,
+        "recall": 0.7777777777777777,
+        "f1": 0.75,
+        "roc_auc": 0.94541910331384,
+        "confidence": 0.9446428571428571
+      },
+      {
+        "accuracy": 0.7692307692307693,
+        "precision": 0.8571428571428571,
+        "recall": 0.75,
+        "f1": 0.709090909090909,
+        "roc_auc": 0.9328703703703703,
+        "confidence": 0.9584615384615385
+      },
+      {
+        "accuracy": 0.75,
+        "precision": 0.8461538461538461,
+        "recall": 0.7142857142857143,
+        "f1": 0.65,
+        "roc_auc": 0.8697478991596638,
+        "confidence": 0.9387500000000001
+      },
+      {
+        "accuracy": 0.7272727272727273,
+        "precision": 0.47863247863247865,
+        "recall": 0.6666666666666666,
+        "f1": 0.5565217391304348,
+        "roc_auc": 0.9253472222222223,
+        "confidence": 0.8922727272727272
+      }
+    ],
+    "logistic_regression": [
+      {
+        "accuracy": 0.9333333333333333,
+        "precision": 0.9333333333333332,
+        "recall": 0.9333333333333332,
+        "f1": 0.9333333333333332,
+        "roc_auc": 0.9966666666666667,
+        "confidence": 0.8620470747174455
+      },
+      {
+        "accuracy": 0.8214285714285714,
+        "precision": 0.8809523809523809,
+        "recall": 0.8148148148148149,
+        "f1": 0.7993311036789298,
+        "roc_auc": 0.9961013645224172,
+        "confidence": 0.9051840215876481
+      },
+      {
+        "accuracy": 0.8076923076923077,
+        "precision": 0.8717948717948718,
+        "recall": 0.7916666666666666,
+        "f1": 0.7691197691197691,
+        "roc_auc": 0.9930555555555557,
+        "confidence": 0.919988622711003
+      },
+      {
+        "accuracy": 0.7916666666666666,
+        "precision": 0.8611111111111112,
+        "recall": 0.7619047619047619,
+        "f1": 0.7270955165692007,
+        "roc_auc": 0.9383753501400559,
+        "confidence": 0.9655676637209366
+      },
+      {
+        "accuracy": 0.8636363636363636,
+        "precision": 0.8888888888888888,
+        "recall": 0.8333333333333334,
+        "f1": 0.8222222222222223,
+        "roc_auc": 0.9965277777777778,
+        "confidence": 0.9628258025588292
+      }
+    ],
+    "svm": [
+      {
+        "accuracy": 0.9666666666666667,
+        "precision": 0.9696969696969697,
+        "recall": 0.9666666666666667,
+        "f1": 0.9665831244778612,
+        "roc_auc": 0.9966666666666667,
+        "confidence": 0.9126960995692422
+      },
+      {
+        "accuracy": 0.8214285714285714,
+        "precision": 0.8809523809523809,
+        "recall": 0.8148148148148149,
+        "f1": 0.7993311036789298,
+        "roc_auc": 0.9649122807017544,
+        "confidence": 0.8971767755550312
+      },
+      {
+        "accuracy": 0.7692307692307693,
+        "precision": 0.8571428571428571,
+        "recall": 0.75,
+        "f1": 0.709090909090909,
+        "roc_auc": 0.8657407407407408,
+        "confidence": 0.8630781096811668
+      },
+      {
+        "accuracy": 0.7916666666666666,
+        "precision": 0.8611111111111112,
+        "recall": 0.7619047619047619,
+        "f1": 0.7270955165692007,
+        "roc_auc": 0.7282913165266106,
+        "confidence": 0.7073468776561324
+      },
+      {
+        "accuracy": 0.8636363636363636,
+        "precision": 0.8888888888888888,
+        "recall": 0.8333333333333334,
+        "f1": 0.8222222222222223,
+        "roc_auc": 0.8333333333333334,
+        "confidence": 0.5806949382649994
+      }
+    ]
+  },
+  "reliability": {
+    "threshold": 0.75,
+    "metric": "accuracy",
+    "horizons": [
+      {
+        "Model": "Logistic Regression",
+        "Baseline": 0.9333,
+        "Threshold": 0.75,
+        "Horizon Level": 0.4,
+        "Reliable Range (%)": 100.0,
+        "Status": "\ud83d\udfe2 Always Reliable",
+        "Rank": 1
+      },
+      {
+        "Model": "SVM",
+        "Baseline": 0.9667,
+        "Threshold": 0.75,
+        "Horizon Level": 0.4,
+        "Reliable Range (%)": 100.0,
+        "Status": "\ud83d\udfe2 Always Reliable",
+        "Rank": 2
+      },
+      {
+        "Model": "Random Forest",
+        "Baseline": 0.9333,
+        "Threshold": 0.75,
+        "Horizon Level": 0.3,
+        "Reliable Range (%)": 75.0,
+        "Status": "\ud83d\udfe1 Degrades Mid-Range",
+        "Rank": 3
+      }
+    ]
+  },
+  "degradation": [
+    {
+      "Rank": 1,
+      "Model": "Logistic Regression",
+      "Baseline": 0.9333,
+      "Worst": 0.8636,
+      "Abs Drop": 0.0697,
+      "% Drop": 7.47,
+      "Deg Rate/Level": 0.1742,
+      "Robustness Score": 88.91
+    },
+    {
+      "Rank": 2,
+      "Model": "SVM",
+      "Baseline": 0.9667,
+      "Worst": 0.8636,
+      "Abs Drop": 0.103,
+      "% Drop": 10.66,
+      "Deg Rate/Level": 0.2576,
+      "Robustness Score": 85.28
+    },
+    {
+      "Rank": 3,
+      "Model": "Random Forest",
+      "Baseline": 0.9333,
+      "Worst": 0.7273,
+      "Abs Drop": 0.2061,
+      "% Drop": 22.08,
+      "Deg Rate/Level": 0.5152,
+      "Robustness Score": 83.98
+    }
+  ],
+  "_png_path": "results\\run_028\\results.png",
+  "_analysis_png_path": "results\\run_028\\per_distortion.png",
+  "_reliability_png_path": "results\\run_028\\reliability.png",
+  "_confusion_png_path": "results\\run_028\\confusion_matrices.png",
+  "_degradation_png_path": "results\\run_028\\degradation_analysis.png"
+}

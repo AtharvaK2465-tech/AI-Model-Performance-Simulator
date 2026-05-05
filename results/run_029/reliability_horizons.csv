@@ -1,0 +1,5 @@
+Model,Baseline,Threshold,Horizon Level,Reliable Range (%),Status,Rank
+XGBoost,0.997,0.8,0.0685,68.5,🟡 Degrades Mid-Range,1
+Decision Tree,0.994,0.8,0.0684,68.4,🟡 Degrades Mid-Range,2
+Gradient Boosting,0.997,0.8,0.0683,68.3,🟡 Degrades Mid-Range,3
+KNN,0.707,0.8,0.0,0.0,🔴 Below Threshold at Baseline,4

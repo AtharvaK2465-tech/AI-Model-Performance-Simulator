@@ -1,0 +1,8 @@
+Model,Baseline,Threshold,Horizon Level,Reliable Range (%),Status,Rank
+SVM,0.629,0.5,0.4,100.0,🟢 Always Reliable,1
+Logistic Regression,0.578,0.5,0.3539,88.5,🟡 Degrades Mid-Range,2
+KNN,0.56,0.5,0.2991,74.8,🟡 Degrades Mid-Range,3
+Gradient Boosting,0.654,0.5,0.2844,71.1,🟡 Degrades Mid-Range,4
+XGBoost,0.651,0.5,0.2768,69.2,🟡 Degrades Mid-Range,5
+Random Forest,0.647,0.5,0.2767,69.2,🟡 Degrades Mid-Range,6
+Decision Tree,0.6535,0.5,0.2762,69.1,🟡 Degrades Mid-Range,7

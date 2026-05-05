@@ -1,0 +1,238 @@
+{
+  "run_id": 25,
+  "timestamp": "2026-05-02 11:36:15",
+  "dataset": "A_year_of_pizza_sales_from_a_pizza_place_872_68.csv",
+  "settings": {
+    "max_distortion_level": 0.4,
+    "num_levels": 5,
+    "test_size": 0.2,
+    "scale_data": true,
+    "random_seed": 42,
+    "selected_models": [
+      "Random Forest",
+      "Logistic Regression",
+      "SVM",
+      "Decision Tree",
+      "KNN",
+      "Gradient Boosting",
+      "XGBoost"
+    ]
+  },
+  "distortions_used": {
+    "gaussian_noise": true,
+    "covariate_drift": true,
+    "distribution_shift": true,
+    "class_imbalance": true,
+    "missing_values": true,
+    "label_noise": true,
+    "outlier_injection": true,
+    "feature_corruption": true
+  },
+  "levels": [
+    0.0,
+    0.1,
+    0.2,
+    0.30000000000000004,
+    0.4
+  ],
+  "results": {
+    "random_forest": [
+      {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "roc_auc": 0.375,
+        "confidence": 0.7000000000000001
+      },
+      {
+        "accuracy": 0.3333333333333333,
+        "precision": 0.3,
+        "recall": 0.3333333333333333,
+        "f1": 0.20833333333333331,
+        "roc_auc": 0.6666666666666667,
+        "confidence": 0.4233333333333333
+      },
+      {
+        "accuracy": 0.2,
+        "precision": 0.25,
+        "recall": 0.08333333333333333,
+        "f1": 0.125,
+        "roc_auc": 0.0,
+        "confidence": 0.42800000000000005
+      },
+      {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "roc_auc": 0.0,
+        "confidence": 0.606
+      },
+      {
+        "accuracy": 0.4,
+        "precision": 0.4444444444444444,
+        "recall": 0.4444444444444444,
+        "f1": 0.3333333333333333,
+        "roc_auc": 0.0,
+        "confidence": 0.632
+      }
+    ],
+    "logistic_regression": [
+      {
+        "accuracy": 0.16666666666666666,
+        "precision": 0.05,
+        "recall": 0.25,
+        "f1": 0.08333333333333333,
+        "roc_auc": 0.5666666666666667,
+        "confidence": 0.557634942136663
+      },
+      {
+        "accuracy": 0.3333333333333333,
+        "precision": 0.1,
+        "recall": 0.16666666666666666,
+        "f1": 0.125,
+        "roc_auc": 0.41666666666666663,
+        "confidence": 0.5150808870697897
+      },
+      {
+        "accuracy": 0.4,
+        "precision": 0.16666666666666666,
+        "recall": 0.2222222222222222,
+        "f1": 0.19047619047619047,
+        "roc_auc": 0.0,
+        "confidence": 0.5455674055444584
+      },
+      {
+        "accuracy": 0.4,
+        "precision": 0.16666666666666666,
+        "recall": 0.16666666666666666,
+        "f1": 0.16666666666666666,
+        "roc_auc": 0.0,
+        "confidence": 0.5390345224609283
+      },
+      {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "roc_auc": 0.0,
+        "confidence": 0.5863670663301441
+      }
+    ],
+    "svm": [
+      {
+        "accuracy": 0.16666666666666666,
+        "precision": 0.05,
+        "recall": 0.25,
+        "f1": 0.08333333333333333,
+        "roc_auc": 0.7166666666666667,
+        "confidence": 0.4179328297339073
+      },
+      {
+        "accuracy": 0.5,
+        "precision": 0.125,
+        "recall": 0.25,
+        "f1": 0.16666666666666666,
+        "roc_auc": 0.4944444444444444,
+        "confidence": 0.45199919563862906
+      },
+      {
+        "accuracy": 0.6,
+        "precision": 0.19999999999999998,
+        "recall": 0.3333333333333333,
+        "f1": 0.25,
+        "roc_auc": 0.0,
+        "confidence": 0.46231503707046945
+      },
+      {
+        "accuracy": 0.4,
+        "precision": 0.16666666666666666,
+        "recall": 0.16666666666666666,
+        "f1": 0.16666666666666666,
+        "roc_auc": 0.0,
+        "confidence": 0.44003304959794376
+      },
+      {
+        "accuracy": 0.2,
+        "precision": 0.06666666666666667,
+        "recall": 0.3333333333333333,
+        "f1": 0.1111111111111111,
+        "roc_auc": 0.0,
+        "confidence": 0.44773005774396213
+      }
+    ]
+  },
+  "reliability": {
+    "threshold": 0.4,
+    "metric": "accuracy",
+    "horizons": [
+      {
+        "Model": "Random Forest",
+        "Baseline": 0.0,
+        "Threshold": 0.4,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 1
+      },
+      {
+        "Model": "Logistic Regression",
+        "Baseline": 0.1667,
+        "Threshold": 0.4,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 2
+      },
+      {
+        "Model": "SVM",
+        "Baseline": 0.1667,
+        "Threshold": 0.4,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 3
+      },
+      {
+        "Model": "Decision Tree",
+        "Baseline": 0.0,
+        "Threshold": 0.4,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 4
+      },
+      {
+        "Model": "KNN",
+        "Baseline": 0.1667,
+        "Threshold": 0.4,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 5
+      },
+      {
+        "Model": "Gradient Boosting",
+        "Baseline": 0.0,
+        "Threshold": 0.4,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 6
+      },
+      {
+        "Model": "XGBoost",
+        "Baseline": 0.1667,
+        "Threshold": 0.4,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 7
+      }
+    ]
+  },
+  "_png_path": "results\\run_025\\results.png",
+  "_analysis_png_path": "results\\run_025\\per_distortion.png",
+  "_reliability_png_path": "results\\run_025\\reliability.png"
+}

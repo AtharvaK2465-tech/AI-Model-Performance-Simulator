@@ -1,0 +1,7 @@
+Model,Baseline,Threshold,Horizon Level,Reliable Range (%),Status,Rank
+KNN,0.9535,0.8,0.1714,85.7,🟡 Degrades Mid-Range,1
+Logistic Regression,0.9651,0.8,0.1549,77.4,🟡 Degrades Mid-Range,2
+Random Forest,0.9535,0.8,0.1519,76.0,🟡 Degrades Mid-Range,3
+Gradient Boosting,0.9767,0.8,0.1489,74.5,🟡 Degrades Mid-Range,4
+SVM,0.9767,0.8,0.1333,66.7,🟡 Degrades Mid-Range,5
+Decision Tree,0.9186,0.8,0.0641,32.0,🔴 Degrades Early,6

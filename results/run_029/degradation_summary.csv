@@ -1,0 +1,5 @@
+Rank,Model,Baseline,Worst,Abs Drop,% Drop,Deg Rate/Level,Robustness Score
+1,KNN,0.707,0.593,0.114,16.12,1.14,94.27
+2,Decision Tree,0.994,0.683,0.311,31.29,3.11,85.84
+3,XGBoost,0.997,0.683,0.314,31.49,3.14,85.71
+4,Gradient Boosting,0.997,0.682,0.315,31.59,3.15,85.63

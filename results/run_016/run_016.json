@@ -1,0 +1,198 @@
+{
+  "run_id": 16,
+  "timestamp": "2026-04-30 15:01:45",
+  "dataset": "social_media_productivity_6000.csv",
+  "settings": {
+    "max_distortion_level": 0.4,
+    "num_levels": 5,
+    "test_size": 0.2,
+    "scale_data": true,
+    "random_seed": 42,
+    "selected_models": [
+      "Random Forest",
+      "Logistic Regression",
+      "Decision Tree"
+    ]
+  },
+  "distortions_used": {
+    "gaussian_noise": true,
+    "covariate_drift": true,
+    "distribution_shift": false,
+    "class_imbalance": true,
+    "missing_values": true,
+    "label_noise": true,
+    "outlier_injection": false,
+    "feature_corruption": false
+  },
+  "levels": [
+    0.0,
+    0.1,
+    0.2,
+    0.30000000000000004,
+    0.4
+  ],
+  "results": {
+    "random_forest": [
+      {
+        "accuracy": 0.05283757338551859,
+        "precision": 0.052718622006706364,
+        "recall": 0.05246815565686443,
+        "f1": 0.051816219565823156,
+        "roc_auc": 0.5108555096681467,
+        "confidence": 0.14762230919765168
+      },
+      {
+        "accuracy": 0.05792349726775956,
+        "precision": 0.057744746733001805,
+        "recall": 0.05670596844737444,
+        "f1": 0.05605806342992376,
+        "roc_auc": 0.5227371277816778,
+        "confidence": 0.13993442622950822
+      },
+      {
+        "accuracy": 0.04534313725490196,
+        "precision": 0.0417651279703019,
+        "recall": 0.04810434150851608,
+        "f1": 0.04377334458636148,
+        "roc_auc": 0.5157273257944273,
+        "confidence": 0.13813725490196077
+      },
+      {
+        "accuracy": 0.031988873435326845,
+        "precision": 0.03886019313319346,
+        "recall": 0.03349411687476204,
+        "f1": 0.032460073273749994,
+        "roc_auc": 0.48373710390963504,
+        "confidence": 0.1334075104311544
+      },
+      {
+        "accuracy": 0.033707865168539325,
+        "precision": 0.024630886542651248,
+        "recall": 0.03543915186782701,
+        "f1": 0.02576063387283948,
+        "roc_auc": 0.4925691413707072,
+        "confidence": 0.12670947030497592
+      }
+    ],
+    "logistic_regression": [
+      {
+        "accuracy": 0.03816046966731898,
+        "precision": 0.030534735651353895,
+        "recall": 0.03565388188223886,
+        "f1": 0.02947300093141529,
+        "roc_auc": 0.5009991508367703,
+        "confidence": 0.06078385917785694
+      },
+      {
+        "accuracy": 0.04480874316939891,
+        "precision": 0.029771449205756095,
+        "recall": 0.041913742690058486,
+        "f1": 0.02826134711202575,
+        "roc_auc": 0.4937095165088124,
+        "confidence": 0.06440409774676349
+      },
+      {
+        "accuracy": 0.0428921568627451,
+        "precision": 0.029387928840291143,
+        "recall": 0.04160816851993323,
+        "f1": 0.027011893186485197,
+        "roc_auc": 0.5176441819247577,
+        "confidence": 0.06906691611887181
+      },
+      {
+        "accuracy": 0.0584144645340751,
+        "precision": 0.038768602699453064,
+        "recall": 0.04871878741494982,
+        "f1": 0.025649345912877815,
+        "roc_auc": 0.5002286544988624,
+        "confidence": 0.07554552522739418
+      },
+      {
+        "accuracy": 0.03210272873194221,
+        "precision": 0.011263349760350263,
+        "recall": 0.03447056023898129,
+        "f1": 0.01326840845898964,
+        "roc_auc": 0.5036226976306846,
+        "confidence": 0.08151202460120757
+      }
+    ],
+    "svm": [
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      }
+    ]
+  },
+  "reliability": {
+    "threshold": 0.75,
+    "metric": "accuracy",
+    "horizons": [
+      {
+        "Model": "Random Forest",
+        "Baseline": 0.0528,
+        "Threshold": 0.75,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 1
+      },
+      {
+        "Model": "Logistic Regression",
+        "Baseline": 0.0382,
+        "Threshold": 0.75,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 2
+      },
+      {
+        "Model": "Decision Tree",
+        "Baseline": 0.0401,
+        "Threshold": 0.75,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 3
+      }
+    ]
+  },
+  "_png_path": "results\\run_016\\results.png",
+  "_analysis_png_path": "results\\run_016\\per_distortion.png",
+  "_reliability_png_path": "results\\run_016\\reliability.png"
+}

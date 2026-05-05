@@ -1,0 +1,8 @@
+Model,Baseline,Threshold,Horizon Level,Reliable Range (%),Status,Rank
+SVM,0.6,0.5,0.2,100.0,🟢 Always Reliable,1
+Logistic Regression,0.6,0.5,0.1,50.0,🟡 Degrades Mid-Range,2
+Random Forest,0.4,0.5,0.0,0.0,🔴 Below Threshold at Baseline,3
+Decision Tree,0.4,0.5,0.0,0.0,🔴 Below Threshold at Baseline,4
+KNN,0.4,0.5,0.0,0.0,🔴 Below Threshold at Baseline,5
+Gradient Boosting,0.2,0.5,0.0,0.0,🔴 Below Threshold at Baseline,6
+XGBoost,0.2,0.5,0.0,0.0,🔴 Below Threshold at Baseline,7

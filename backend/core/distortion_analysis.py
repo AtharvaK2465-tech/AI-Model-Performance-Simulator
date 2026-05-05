@@ -1,6 +1,6 @@
 import numpy as np
-from distortions import apply_distortion
-from evaluation import evaluate
+from backend.core.distortions import apply_distortion
+from backend.core.evaluation import evaluate
 
 
 DISTORTION_NAMES = [

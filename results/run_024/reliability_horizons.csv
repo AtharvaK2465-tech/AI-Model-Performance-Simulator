@@ -1,0 +1,5 @@
+Model,Baseline,Threshold,Horizon Level,Reliable Range (%),Status,Rank
+Decision Tree,0.263,0.4,0.0,0.0,🔴 Below Threshold at Baseline,1
+KNN,0.253,0.4,0.0,0.0,🔴 Below Threshold at Baseline,2
+Gradient Boosting,0.261,0.4,0.0,0.0,🔴 Below Threshold at Baseline,3
+XGBoost,0.246,0.4,0.0,0.0,🔴 Below Threshold at Baseline,4

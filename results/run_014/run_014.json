@@ -1,0 +1,198 @@
+{
+  "run_id": 14,
+  "timestamp": "2026-04-30 14:52:13",
+  "dataset": "Disease_symptom_and_patient_profile_dataset.csv",
+  "settings": {
+    "max_distortion_level": 0.4,
+    "num_levels": 5,
+    "test_size": 0.2,
+    "scale_data": true,
+    "random_seed": 42,
+    "selected_models": [
+      "Random Forest",
+      "Logistic Regression",
+      "SVM"
+    ]
+  },
+  "distortions_used": {
+    "gaussian_noise": true,
+    "covariate_drift": true,
+    "distribution_shift": true,
+    "class_imbalance": true,
+    "missing_values": false,
+    "label_noise": false,
+    "outlier_injection": false,
+    "feature_corruption": false
+  },
+  "levels": [
+    0.0,
+    0.1,
+    0.2,
+    0.30000000000000004,
+    0.4
+  ],
+  "results": {
+    "random_forest": [
+      {
+        "accuracy": 0.5714285714285714,
+        "precision": 0.5716666666666668,
+        "recall": 0.5716666666666668,
+        "f1": 0.5714285714285714,
+        "roc_auc": 0.6825,
+        "confidence": 0.7138775510204081
+      },
+      {
+        "accuracy": 0.5434782608695652,
+        "precision": 0.5416666666666667,
+        "recall": 0.5419047619047619,
+        "f1": 0.5415282392026578,
+        "roc_auc": 0.6619047619047619,
+        "confidence": 0.7352173913043478
+      },
+      {
+        "accuracy": 0.4772727272727273,
+        "precision": 0.4708333333333333,
+        "recall": 0.4705263157894737,
+        "f1": 0.47043432757718473,
+        "roc_auc": 0.6042105263157895,
+        "confidence": 0.7136363636363637
+      },
+      {
+        "accuracy": 0.4634146341463415,
+        "precision": 0.4607142857142857,
+        "recall": 0.45875,
+        "f1": 0.4553140096618358,
+        "roc_auc": 0.56125,
+        "confidence": 0.7317073170731707
+      },
+      {
+        "accuracy": 0.5128205128205128,
+        "precision": 0.5092105263157894,
+        "recall": 0.51,
+        "f1": 0.501010101010101,
+        "roc_auc": 0.6385714285714286,
+        "confidence": 0.717948717948718
+      }
+    ],
+    "logistic_regression": [
+      {
+        "accuracy": 0.6326530612244898,
+        "precision": 0.6353448275862069,
+        "recall": 0.6308333333333334,
+        "f1": 0.6287878787878788,
+        "roc_auc": 0.7050000000000001,
+        "confidence": 0.6462498662507274
+      },
+      {
+        "accuracy": 0.6304347826086957,
+        "precision": 0.626984126984127,
+        "recall": 0.621904761904762,
+        "f1": 0.621673923560716,
+        "roc_auc": 0.6876190476190476,
+        "confidence": 0.6866054066741395
+      },
+      {
+        "accuracy": 0.6590909090909091,
+        "precision": 0.6541666666666667,
+        "recall": 0.6557894736842105,
+        "f1": 0.6546310832025117,
+        "roc_auc": 0.7010526315789474,
+        "confidence": 0.7231391519896375
+      },
+      {
+        "accuracy": 0.6585365853658537,
+        "precision": 0.64125,
+        "recall": 0.64125,
+        "f1": 0.64125,
+        "roc_auc": 0.6950000000000001,
+        "confidence": 0.7107928236480457
+      },
+      {
+        "accuracy": 0.6666666666666666,
+        "precision": 0.6631578947368422,
+        "recall": 0.6771428571428572,
+        "f1": 0.6585858585858586,
+        "roc_auc": 0.6857142857142857,
+        "confidence": 0.7692983859522505
+      }
+    ],
+    "svm": [
+      {
+        "accuracy": 0.6122448979591837,
+        "precision": 0.6125,
+        "recall": 0.6125,
+        "f1": 0.6122448979591837,
+        "roc_auc": 0.6483333333333333,
+        "confidence": 0.71149092766205
+      },
+      {
+        "accuracy": 0.5869565217391305,
+        "precision": 0.5890151515151515,
+        "recall": 0.5895238095238096,
+        "f1": 0.5867612293144208,
+        "roc_auc": 0.6057142857142856,
+        "confidence": 0.6988726123112567
+      },
+      {
+        "accuracy": 0.5454545454545454,
+        "precision": 0.5486542443064182,
+        "recall": 0.5494736842105263,
+        "f1": 0.5445134575569358,
+        "roc_auc": 0.5905263157894737,
+        "confidence": 0.6414229010518188
+      },
+      {
+        "accuracy": 0.5365853658536586,
+        "precision": 0.5507246376811594,
+        "recall": 0.5525,
+        "f1": 0.5354800238521169,
+        "roc_auc": 0.51875,
+        "confidence": 0.5791521070038335
+      },
+      {
+        "accuracy": 0.5641025641025641,
+        "precision": 0.592391304347826,
+        "recall": 0.5971428571428572,
+        "f1": 0.5629531970995385,
+        "roc_auc": 0.5942857142857143,
+        "confidence": 0.5308301219594639
+      }
+    ]
+  },
+  "reliability": {
+    "threshold": 0.75,
+    "metric": "accuracy",
+    "horizons": [
+      {
+        "Model": "Random Forest",
+        "Baseline": 0.5714,
+        "Threshold": 0.75,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 1
+      },
+      {
+        "Model": "Logistic Regression",
+        "Baseline": 0.6327,
+        "Threshold": 0.75,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 2
+      },
+      {
+        "Model": "SVM",
+        "Baseline": 0.6122,
+        "Threshold": 0.75,
+        "Horizon Level": 0.0,
+        "Reliable Range (%)": 0.0,
+        "Status": "\ud83d\udd34 Below Threshold at Baseline",
+        "Rank": 3
+      }
+    ]
+  },
+  "_png_path": "results\\run_014\\results.png",
+  "_analysis_png_path": "results\\run_014\\per_distortion.png",
+  "_reliability_png_path": "results\\run_014\\reliability.png"
+}
