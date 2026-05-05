@@ -1,49 +1,185 @@
 # 🤖 AI Model Performance Simulator
 
-Simulate how ML classification models degrade under real-world data distortions — noise, drift, imbalance, missing values, label noise, outliers, feature corruption, and more.
+> A full-stack ML deployment tool that stress-tests classification models under controlled real-world data degradation — noise, drift, imbalance, missing values, label noise, outliers, and feature corruption.
 
-## 📊 Main Simulation Chart
-
-![results](results.png)
-
-## 🔬 Per-Distortion Analysis Chart
-
-![per_distortion](per_distortion.png)
-
-## 📉 Degradation Rate Analysis
-
-![degradation](degradation_analysis.png)
-
-## 🔲 Confusion Matrices — Clean vs Max Distortion
-
-![confusion_matrices](confusion_matrices.png)
-
-## ⏱️ Reliability Horizon Chart
-
-![reliability](reliability.png)
-
-## 🏆 Model Recommendation Dashboard
-
-![recommendation](recommendation_dashboard.png)
+**Stack:** FastAPI · React · Vite · Tailwind CSS · scikit-learn · Plotly.js · Render
 
 ---
 
-## What it does
+## 🏗️ Architecture
 
-Trains up to **7 ML models** on clean data, then evaluates them across increasing distortion levels. Tracks **6 metrics** at each level and produces:
-
-- A **2×3 comparison chart** of all metrics vs distortion level
-- A **per-distortion analysis** showing which distortion type hurts each model the most
-- A **degradation rate analysis** showing how fast each model degrades, with robustness scores and tier badges
-- **Confusion matrices** comparing each model's clean vs max-distortion classification behaviour
-- A **reliability horizon** — the exact distortion level at which each model becomes untrustworthy
-- A **model recommendation engine** — composite scoring with adjustable weights across robustness, peak accuracy, and stability, with radar chart, bar chart, and top-3 trajectory plots
-
-Every run is saved locally with charts, metrics, and all analysis data.
+```
+┌──────────────────────────────────────────────────────┐
+│                   React Frontend                     │
+│   Vite · Tailwind CSS · Zustand · Plotly.js          │
+│                                                      │
+│   Step 1     Step 2     Step 3     Step 4            │
+│   Dataset  → Config   → Run     → Results            │
+│                                                      │
+│   Step 5     Step 6     Step 7                       │
+│   Analysis → Recommend → History                     │
+└───────────────────────┬──────────────────────────────┘
+                        │ REST + SSE
+┌───────────────────────▼──────────────────────────────┐
+│                  FastAPI Backend                     │
+│                                                      │
+│   POST /api/simulate   ← SSE streaming               │
+│   POST /api/analysis                                 │
+│   POST /api/recommend                                │
+│   GET  /api/history                                  │
+└───────────────────────┬──────────────────────────────┘
+                        │
+┌───────────────────────▼──────────────────────────────┐
+│                  backend/core/                       │
+│                                                      │
+│   model.py                 → 7 sklearn models        │
+│   distortions.py           → 8 distortion types      │
+│   evaluation.py            → 6 metrics               │
+│   distortion_analysis.py   → per-distortion engine   │
+│   degradation_analysis.py  → robustness scoring      │
+│   confusion_matrix_analysis.py                       │
+│   reliability_analysis.py  → horizon tracker         │
+│   recommendation_engine.py → composite scoring       │
+│   run_logger.py            → save/load runs          │
+└──────────────────────────────────────────────────────┘
+```
 
 ---
 
-## Models
+## 📁 Project Structure
+
+```
+AI-Model-Performance-Simulator/
+│
+├── backend/
+│   ├── main.py                      ← FastAPI app entry point
+│   ├── routes/
+│   │   ├── simulate.py              ← POST /api/simulate (SSE)
+│   │   ├── analysis.py              ← POST /api/analysis
+│   │   ├── recommend.py             ← POST /api/recommend
+│   │   └── history.py               ← GET  /api/history
+│   ├── core/
+│   │   ├── model.py                 ← 7 models + dataset loading
+│   │   ├── distortions.py           ← 8 distortion functions
+│   │   ├── evaluation.py            ← 6 metrics
+│   │   ├── distortion_analysis.py
+│   │   ├── degradation_analysis.py
+│   │   ├── confusion_matrix_analysis.py
+│   │   ├── reliability_analysis.py
+│   │   ├── recommendation_engine.py
+│   │   └── run_logger.py
+│   ├── results/                     ← saved runs (gitignored)
+│   └── requirements.txt
+│
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx                  ← step router
+│   │   ├── api.js                   ← all fetch calls
+│   │   ├── store.js                 ← Zustand global state
+│   │   ├── pages/
+│   │   │   ├── Step1_Dataset.jsx
+│   │   │   ├── Step2_Config.jsx
+│   │   │   ├── Step3_Run.jsx
+│   │   │   ├── Step4_Results.jsx
+│   │   │   ├── Step5_Analysis.jsx
+│   │   │   ├── Step6_Recommend.jsx
+│   │   │   └── Step7_History.jsx
+│   │   └── components/
+│   │       ├── StepNav.jsx
+│   │       ├── MetricChart.jsx
+│   │       ├── RadarChart.jsx
+│   │       └── ConfusionMatrix.jsx
+│   └── package.json
+│
+├── app.py                           ← original Streamlit app (kept for reference)
+├── render.yaml                      ← Render deployment config
+├── .gitignore
+└── README.md
+```
+
+---
+
+## 🚀 Local Development
+
+### Backend
+
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
+```
+
+Swagger UI → `http://localhost:8000/docs`
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+App → `http://localhost:5173`
+
+### Original Streamlit app (still works)
+
+```bash
+pip install -r backend/requirements.txt
+streamlit run app.py
+```
+
+---
+
+## 🔌 API Reference
+
+### `POST /api/simulate`
+
+Streams progress via Server-Sent Events, then returns full results.
+
+**Request:**
+```json
+{
+  "dataset": "iris",
+  "models": ["Random Forest", "Logistic Regression"],
+  "distortion_type": "noise",
+  "levels": [0.0, 0.1, 0.2, 0.3, 0.4]
+}
+```
+
+**SSE stream:**
+```
+data: {"step": 1, "total": 5, "level": 0.0, "done": false}
+data: {"step": 2, "total": 5, "level": 0.1, "done": false}
+...
+data: {"done": true, "results": [...]}
+```
+
+### `POST /api/analysis`
+
+Returns per-distortion metrics, degradation %, and reliability scores.
+
+```json
+{ "results": [ ...simulate results array... ] }
+```
+
+### `POST /api/recommend`
+
+Returns composite scores and the recommended model.
+
+```json
+{
+  "results": [ ...simulate results array... ],
+  "weights": { "accuracy": 0.4, "f1": 0.3, "robustness": 0.3 }
+}
+```
+
+### `GET /api/history`
+
+Returns all saved simulation runs from `backend/results/`.
+
+---
+
+## 🤖 Models
 
 | Model | Details |
 |---|---|
@@ -57,7 +193,7 @@ Every run is saved locally with charts, metrics, and all analysis data.
 
 ---
 
-## Metrics Tracked
+## 📊 Metrics Tracked
 
 | Metric | Description |
 |---|---|
@@ -65,68 +201,40 @@ Every run is saved locally with charts, metrics, and all analysis data.
 | Precision (macro) | Avg precision across all classes |
 | Recall (macro) | Avg recall across all classes |
 | F1 Score (macro) | Harmonic mean of precision & recall |
-| ROC-AUC Score | Discrimination ability across classes |
-| Model Confidence | Mean max prediction probability |
+| ROC-AUC | Discrimination ability across classes |
+| Confidence | Mean max prediction probability |
 
 ---
 
-## Distortion Types
+## 💥 Distortion Types
 
-| Type | Description |
-|---|---|
-| Gaussian Noise | Random noise added to all features |
-| Covariate Drift | Mean shift in feature values |
-| Distribution Shift | Feature variance expansion/compression |
-| Class Imbalance | Minority classes progressively dropped |
-| Missing Values | Random NaN injection, filled with column mean |
-| Label Noise | Random class label flipping (annotation errors) |
-| Outlier Injection | Extreme values (±5 std devs) in random samples |
-| Feature Corruption | Random feature columns zeroed out (sensor failure) |
-
----
-
-## Dataset Support
-
-- **Built-in:** Iris, Wine, Breast Cancer (sklearn)
-- **Custom CSV:** Upload any CSV file
-  - Auto-detects numeric features
-  - Auto-encodes categorical columns (up to 20 unique values)
-  - Drops ID-like and high-cardinality columns
-  - Handles missing values, duplicates, and class imbalance warnings
-  - Detects and warns about regression targets
+| Type | Parameter | Effect |
+|---|---|---|
+| Gaussian Noise | `noise_level` | Random noise added to features |
+| Data Drift | `drift_level` | Feature mean shift over time |
+| Distribution Shift | `dist_shift_level` | Feature variance change |
+| Missing Values | `missing_level` | Random NaN injection |
+| Class Imbalance | `imbalance_level` | Minority class undersampling |
+| Label Noise | `label_noise_level` | Random label flipping |
+| Outliers | `outlier_level` | Extreme value injection |
+| Feature Corruption | `corruption_level` | Feature columns zeroed out |
 
 ---
 
-## Simulation Controls
+## 📉 Degradation Analysis
 
-| Control | Description |
-|---|---|
-| Max Distortion Level | How severe distortions get (0.1 mild → 1.0 extreme) |
-| Number of Distortion Levels | Steps between 0 and max level |
-| Test Set Size | Fraction of data held out for testing |
-| Feature Scaling | StandardScaler on/off |
-| Random Seed | Reproducible train/test splits |
-| Model Selection | Choose which models to compare |
-| Distortion Type Checkboxes | Choose which distortions to apply |
-
----
-
-## 📉 Degradation Rate Analysis
-
-Shows how fast each model degrades as distortion increases.
-
-### Metrics computed per model
+Tracks how fast each model degrades as distortion increases.
 
 | Metric | Description |
 |---|---|
-| Baseline | Performance at zero distortion (clean data) |
-| Worst | Performance at maximum distortion level |
+| Baseline | Performance at zero distortion |
+| Worst | Performance at max distortion |
 | Abs Drop | Baseline minus Worst |
-| % Drop | Percentage of baseline performance lost |
-| Deg Rate/Level | Performance lost per unit of distortion |
-| Robustness Score | Area under performance curve, normalised 0–100 |
+| % Drop | Percentage of baseline lost |
+| Deg Rate/Level | Performance lost per distortion unit |
+| Robustness Score | AUC under performance curve, 0–100 |
 
-### Robustness tiers
+**Robustness tiers:**
 
 | Score | Tier |
 |---|---|
@@ -135,291 +243,113 @@ Shows how fast each model degrades as distortion increases.
 | 55–74 | Moderate |
 | 0–54 | Fragile |
 
-### Outputs
+---
 
-- **Two-panel chart** — left: performance curves per model; right: horizontal robustness ranking bar chart with % drop annotations
-- **Colour-coded summary table** — green/yellow/orange/red by robustness score
-- **Tier badges** — `st.metric` cards showing each model's tier and % drop
-- **Metric selector** — switch between accuracy, F1, precision, recall without re-running
-- **CSV download** — degradation summary exportable
+## ⏱️ Reliability Horizon
+
+Identifies the exact distortion level at which each model becomes untrustworthy.
+
+- Set a reliability threshold (e.g. accuracy ≥ 0.75)
+- Simulator interpolates the precise crossing point per model
+- Auto-suggests threshold at 80% of best model's clean baseline
+- Models that never drop below threshold → **Always Reliable**
 
 ---
 
-## 🔲 Confusion Matrices
+## 🏆 Recommendation Engine
 
-Shows each model's confusion matrix at **clean baseline** (left) and **max distortion** (right) side by side.
-
-### What it shows
-
-- Each cell displays raw count and row-normalised percentage
-- Diagonal cells = correct predictions; off-diagonal = misclassifications
-- Accuracy shown below each matrix
-- Color intensity reflects prediction rate per cell
-- Accuracy summary `st.metric` cards below the chart show clean accuracy and drop at max distortion per model
-
----
-
-## ⏱️ Model Reliability Horizon
-
-Answers the key question: **"At what distortion level does this model become untrustworthy?"**
-
-### How it works
-
-1. You set a **reliability threshold** (e.g. accuracy ≥ 0.75) via an interactive slider
-2. The simulator scans each model's performance curve across distortion levels
-3. It **interpolates the exact crossing point** between the last good level and the first bad level — the **reliability horizon**
-4. Models that never drop below the threshold are marked **Always Reliable**
-
-### Auto-threshold
-
-The threshold is **auto-suggested at 80% of the best model's clean baseline accuracy** — so it always produces meaningful results regardless of how hard or easy the dataset is.
-
-### Robustness tiers
-
-| Reliable Range % | Tier |
-|---|---|
-| 90–100% | Always Reliable |
-| 60–89% | Degrades Mid-Range |
-| 0–59% | Degrades Early / Below Threshold at Baseline |
-
-### Outputs
-
-- **Per-model subplots** — green shaded (safe zone) and red shaded (unreliable zone) with threshold line and horizon marker
-- **Best model banner** — green success box showing the recommended model
-- **Colour-coded Reliability Horizon Table** — Reliable Range % highlighted green/yellow/red
-- **Auto-generated verdict** — viva-ready conclusion paragraph
-- **Metric selector** — switch between accuracy, F1, precision, recall without re-running
-- **CSV download** — reliability horizon table exportable
-
-### Persistent widget state
-
-Changing any slider or dropdown **does not re-run the simulation** — all sections recompute from cached results instantly.
-
----
-
-## 🏆 Model Recommendation Engine
-
-Answers the question: **"Which model should I actually deploy?"**
-
-Produces a **composite score** by combining three sub-scores with adjustable weights:
+Composite score combining three sub-scores with adjustable weights:
 
 | Sub-score | What it measures | Default weight |
 |---|---|---|
-| Robustness Score | AUC under accuracy curve, normalised 0–100 | 40% |
-| Peak Accuracy | Best accuracy achieved across all distortion levels | 35% |
-| Stability Score | 1 − std(accuracy), higher = more consistent | 25% |
-
-Weights are user-adjustable via sliders and automatically normalised to sum to 1.0.
-
-### Outputs
-
-- **Radar chart** — all models plotted on 4 axes: Robustness / Peak Accuracy / Stability / Composite Score
-- **Composite score bar chart** — ranked bar chart with gold border on top pick
-- **Top-3 trajectory mini-plots** — Accuracy, F1, and ROC-AUC vs distortion level for the three highest-scoring models
-- **Composite score table** — all sub-scores and final composite score per model
-- **Top recommendation banner** — green success card naming the best model with its scores
-- **CSV download** — full recommendation table exportable
+| Robustness Score | AUC under accuracy curve, 0–100 | 40% |
+| Peak Accuracy | Best accuracy across all levels | 35% |
+| Stability Score | 1 − std(accuracy) | 25% |
 
 ---
 
-## Run History
+## 💾 Run History
 
-Every simulation run is automatically saved to `results/run_NNN/`:
+Every simulation is saved to `backend/results/run_NNN/`:
 
 ```
 results/
-├── run_001/
-│   ├── run_001.json                   # Settings, metrics, reliability, degradation + recommendation data
-│   ├── results.png                    # Main 2×3 simulation chart
-│   ├── per_distortion.png             # Per-distortion bar chart
-│   ├── degradation_analysis.png       # Degradation rate + robustness ranking
-│   ├── confusion_matrices.png         # Clean vs max distortion confusion matrices
-│   ├── reliability.png                # Reliability horizon chart
-│   ├── recommendation_dashboard.png   # Recommendation engine — radar + bar + trajectories
-│   ├── per_distortion_analysis.csv    # Per-distortion results table
-│   ├── degradation_summary.csv        # Robustness scores per model
-│   ├── reliability_horizons.csv       # Reliability horizon table
-│   └── model_recommendation.csv      # Composite scores per model
-├── run_002/
-│   └── ...
+└── run_001/
+    ├── run_001.json
+    ├── per_distortion_analysis.csv
+    ├── degradation_summary.csv
+    ├── reliability_horizons.csv
+    └── model_recommendation.csv
 ```
 
-The **Run History** section in the Streamlit dashboard shows all past runs with all charts and tables inline.
-
-### JSON structure
-
-Each `run_NNN.json` stores:
-
+**JSON structure:**
 ```json
 {
   "run_id": 1,
   "timestamp": "2026-05-01 14:32:00",
   "dataset": "iris",
-  "settings": { "max_distortion_level": 0.4, "num_levels": 5, "...": "..." },
-  "distortions_used": { "gaussian_noise": true, "...": "..." },
+  "settings": { "max_distortion_level": 0.4, "num_levels": 5 },
   "levels": [0.0, 0.1, 0.2, 0.3, 0.4],
   "results": {
-    "random_forest": [{ "accuracy": 0.95, "f1": 0.94, "...": "..." }],
-    "logistic_regression": ["..."],
-    "svm": ["..."]
+    "Random Forest": [{ "accuracy": 0.95, "f1": 0.94, "roc_auc": 0.99 }]
   },
-  "degradation": [
-    {
-      "Rank": 1, "Model": "Random Forest",
-      "Baseline": 0.95, "Worst": 0.81,
-      "Abs Drop": 0.14, "% Drop": 14.7,
-      "Deg Rate/Level": 0.35, "Robustness Score": 91.2
-    }
-  ],
-  "reliability": {
-    "threshold": 0.75,
-    "metric": "accuracy",
-    "horizons": [
-      {
-        "Model": "Random Forest", "Baseline": 0.95,
-        "Horizon Level": 0.38, "Reliable Range (%)": 95.0,
-        "Status": "Always Reliable", "Rank": 1
-      }
-    ]
-  },
-  "recommendation": [
-    {
-      "Model": "Random Forest",
-      "Robustness Score": 91.2,
-      "Peak Accuracy": 0.967,
-      "Stability Score": 0.921,
-      "Composite Score": 0.934
-    }
-  ],
-  "_png_path": "results/run_001/results.png",
-  "_analysis_png_path": "results/run_001/per_distortion.png",
-  "_degradation_png_path": "results/run_001/degradation_analysis.png",
-  "_confusion_png_path": "results/run_001/confusion_matrices.png",
-  "_reliability_png_path": "results/run_001/reliability.png",
-  "_recommendation_png_path": "results/run_001/recommendation_dashboard.png"
+  "degradation": [{ "Model": "Random Forest", "Robustness Score": 91.2 }],
+  "reliability": { "threshold": 0.75, "horizons": [] },
+  "recommendation": [{ "Model": "Random Forest", "Composite Score": 0.934 }]
 }
 ```
 
 ---
 
-## Setup
+## 🧪 Tests
 
 ```bash
-git clone https://github.com/AtharvaK2465-tech/AI-Model-Performance-Simulator.git
-cd AI-Model-Performance-Simulator
-pip install -r requirements.txt
+cd backend
+pytest tests/test_simulator.py -v
 ```
 
 ---
 
-## Usage
-
-**Web Dashboard (Streamlit):**
-
-```bash
-streamlit run app.py
-```
-
-**CLI (terminal):**
-
-```bash
-# Default (Iris dataset)
-python main.py
-
-# Different dataset
-python main.py --dataset wine
-python main.py --dataset breast_cancer
-
-# Custom distortion levels
-python main.py --levels 0 0.05 0.1 0.2 0.3 0.5
-
-# Custom CSV
-python main.py --csv path/to/your/data.csv
-
-# Save plot
-python main.py --save output/results.png
-```
-
----
-
-## Run Tests
-
-```bash
-pytest test_simulator.py -v
-```
-
-All 7 tests pass.
-
----
-
-## Project Structure
+## 📦 Requirements
 
 ```
-AI-Model-Performance-Simulator/
-├── app.py                         # Streamlit web dashboard
-├── main.py                        # CLI entry point
-├── model.py                       # 7 models + dataset loading + colors/markers
-├── distortions.py                 # 8 distortion functions
-├── distortion_analysis.py         # Per-distortion analysis engine
-├── evaluation.py                  # 6 metrics
-├── visualization.py               # 2×3 metrics chart
-├── degradation_analysis.py        # Degradation rate + robustness scoring
-├── confusion_matrix_analysis.py   # Clean vs max distortion confusion matrices
-├── reliability_analysis.py        # Reliability horizon tracker
-├── recommendation_engine.py       # Composite scoring + radar/bar/trajectory charts
-├── run_logger.py                  # Run history — save + load (JSON + PNG + CSV)
-├── test_simulator.py              # Unit tests (7/7 passing)
-├── requirements.txt
-├── .gitignore
-└── results/                       # Saved run folders (git-ignored)
-    └── run_NNN/
-        ├── run_NNN.json
-        ├── results.png
-        ├── per_distortion.png
-        ├── degradation_analysis.png
-        ├── confusion_matrices.png
-        ├── reliability.png
-        ├── recommendation_dashboard.png
-        ├── per_distortion_analysis.csv
-        ├── degradation_summary.csv
-        ├── reliability_horizons.csv
-        └── model_recommendation.csv
-```
-
----
-
-## Requirements
-
-```
+fastapi
+uvicorn
+scikit-learn
 numpy
 pandas
-scikit-learn
 matplotlib
-streamlit
 xgboost
+python-multipart
+pydantic
 ```
 
 ---
 
-## Key Design Decisions
+## 🚢 Build Status
 
-**Why session state for charts?**
-Streamlit reruns the entire script on every widget interaction. Without `st.session_state`, changing any dropdown or slider would clear all simulation results. All outputs are stored in session state so widgets update charts instantly without re-training.
+| Session | Status | What was built |
+|---|---|---|
+| Session 1 | ✅ Complete | FastAPI backend — all 4 routes, core wrappers |
+| Session 2 | 🔨 In progress | React frontend Steps 1–3, SSE progress bar |
+| Session 3 | ⏳ Pending | Results charts, Analysis tabs, Recommend page |
+| Session 4 | ⏳ Pending | History page, Render deployment |
 
-**Why auto-suggest the reliability threshold?**
-A fixed default of 0.75 fails on hard datasets where even the best model scores 0.50 at baseline. Auto-suggesting 80% of the best baseline makes the threshold always meaningful and dataset-aware.
+---
 
-**Why interpolate the horizon?**
-A coarse distortion grid means the true crossing point is between two measured levels. Linear interpolation gives a precise horizon level rather than just reporting the last known good level.
+## 🔑 Key Design Decisions
 
-**Why XGBoost?**
-XGBoost consistently outperforms standard Gradient Boosting on tabular data due to regularisation and parallelised tree building. It serves as a strong ensemble baseline for robustness comparison.
+**Why SSE over polling for the progress bar?**
+SSE streams each distortion level result as it completes, giving genuine real-time feedback. Polling would require a separate status endpoint and introduce latency between completion and UI update.
 
 **Why area under the curve for robustness score?**
-A model that degrades slowly across many levels is more robust than one that holds well until suddenly collapsing. AUC captures the entire degradation trajectory, not just the endpoint, making it a fairer robustness measure than % drop alone.
+A model that degrades slowly is more robust than one that holds well then suddenly collapses. AUC captures the full trajectory, not just the endpoint.
 
-**Why confusion matrices at max distortion only?**
-Showing every distortion level would produce too many matrices to be readable. Clean baseline vs max distortion gives the clearest before/after picture of how class boundaries collapse under stress.
+**Why interpolate the reliability horizon?**
+A coarse distortion grid means the true crossing point sits between two measured levels. Linear interpolation gives a precise horizon rather than just the last known good level.
 
 **Why a composite score for recommendation?**
-No single metric captures deployment readiness. A model with high peak accuracy but poor stability is risky in production. The composite score — robustness 40%, peak accuracy 35%, stability 25% — balances all three concerns, with user-adjustable weights to match different deployment priorities.
+No single metric captures deployment readiness. High peak accuracy with poor stability is risky in production. The composite score balances robustness, accuracy, and stability — with user-adjustable weights.
+
+**Why auto-suggest the reliability threshold?**
+A fixed default of 0.75 fails on hard datasets where even the best model scores 0.50 at baseline. Auto-suggesting 80% of the best baseline always produces meaningful results.
