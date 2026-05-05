@@ -19,6 +19,7 @@ from reliability_analysis import (
 )
 from confusion_matrix_analysis import compute_confusion_matrices, plot_confusion_matrices
 from degradation_analysis import compute_degradation, plot_degradation, get_robustness_tier
+from recommendation_engine import build_recommendation
 
 # ─── Page Config ───────────────────────────────────────────────────────────────
 st.set_page_config(page_title="AI Model Performance Simulator", layout="wide")
@@ -56,6 +57,12 @@ defaults = {
     "fig_confusion":        None,
     "fig_degradation":      None,
     "summary_df":           None,
+    "fig_recommendation":   None,
+    "rec_df":               None,
+    "fig_reliability":      None,   # persisted so save_run can use it
+    "horizons_df":          None,
+    "reliability_threshold": None,
+    "reliability_metric":   None,
 }
 for k, v in defaults.items():
     if k not in st.session_state:
@@ -144,7 +151,7 @@ else:
                 st.stop()
 
             st.subheader("Uploaded Data Preview")
-            st.dataframe(df.head(10), use_container_width=True)
+            st.dataframe(df.head(10), width='stretch')
             st.caption(f"Shape: {df.shape[0]} rows x {df.shape[1]} columns")
 
             columns    = df.columns.tolist()
@@ -490,7 +497,7 @@ if st.sidebar.button("Run Simulation"):
         rows.append(row)
 
     results_df = pd.DataFrame(rows)
-    st.dataframe(results_df, use_container_width=True)
+    st.dataframe(results_df, width='stretch')
 
     st.download_button(
         label="Download Results as CSV",
@@ -575,6 +582,12 @@ if st.sidebar.button("Run Simulation"):
     st.session_state.y_test               = y_test
     st.session_state.y_test_max_dist      = y_test_max_dist
     st.session_state.summary_df           = summary_df
+    st.session_state.fig_recommendation   = None   # reset on new sim run
+    st.session_state.rec_df               = None
+    st.session_state.fig_reliability      = None   # reset on new sim run
+    st.session_state.horizons_df          = None
+    st.session_state.reliability_threshold = None
+    st.session_state.reliability_metric   = None
     st.session_state.settings             = {
         "max_distortion_level": max_level,
         "num_levels":           num_levels,
@@ -628,7 +641,7 @@ if st.session_state.sim_done and st.session_state.analysis_results is not None:
     st.session_state.fig_analysis = fig_a
 
     st.subheader("Per-Distortion Results Table")
-    st.dataframe(st.session_state.analysis_df, use_container_width=True)
+    st.dataframe(st.session_state.analysis_df, width='stretch')
 
     st.download_button(
         label="Download Analysis as CSV",
@@ -664,11 +677,10 @@ if st.session_state.sim_done and st.session_state.rel_df is not None:
     deg_fig = plot_degradation(
         st.session_state.rel_df, summary_df, MODEL_COLORS, metric=deg_metric
     )
-    st.pyplot(deg_fig, use_container_width=True)
+    st.pyplot(deg_fig, width='stretch')
     st.session_state.fig_degradation = deg_fig
     plt.close(deg_fig)
 
-    # ── Robustness summary table ───────────────────────────────────────────────
     st.markdown("**Robustness Summary Table**")
 
     def _colour_robustness(val):
@@ -688,9 +700,8 @@ if st.session_state.sim_done and st.session_state.rel_df is not None:
         .map(_colour_robustness, subset=["Robustness Score"])
         .format({"% Drop": "{:.2f}%", "Robustness Score": "{:.2f}"})
     )
-    st.dataframe(styled_summary, use_container_width=True)
+    st.dataframe(styled_summary, width='stretch')
 
-    # ── Tier badges ───────────────────────────────────────────────────────────
     st.markdown("**Robustness Tiers:**")
     tier_cols = st.columns(len(summary_df))
     for col, (_, row) in zip(tier_cols, summary_df.iterrows()):
@@ -702,7 +713,6 @@ if st.session_state.sim_done and st.session_state.rel_df is not None:
             delta_color="inverse"
         )
 
-    # ── Download ──────────────────────────────────────────────────────────────
     deg_csv = summary_df.to_csv(index=False).encode("utf-8")
     st.download_button(
         "Download Degradation Summary CSV",
@@ -741,11 +751,10 @@ if st.session_state.sim_done and st.session_state.trained_models is not None:
             st.warning(f"Confusion matrix error for {name}: {res['error']}")
 
     cm_fig = plot_confusion_matrices(cm_results, MODEL_COLORS)
-    st.pyplot(cm_fig, use_container_width=True)
+    st.pyplot(cm_fig, width='stretch')
     st.session_state.fig_confusion = cm_fig
     plt.close(cm_fig)
 
-    # ── Accuracy summary cards ────────────────────────────────────────────────
     st.markdown("**Accuracy Summary: Clean vs Max Distortion**")
     valid = {k: v for k, v in cm_results.items() if "error" not in v}
     if valid:
@@ -825,7 +834,13 @@ if st.session_state.sim_done and st.session_state.rel_df is not None:
         metric=reliability_metric,
         threshold=reliability_threshold,
     )
-    st.pyplot(rel_fig, use_container_width=True)
+    st.pyplot(rel_fig, width='stretch')
+
+    # ── Persist reliability outputs so save_run can use them ──────────────────
+    st.session_state.fig_reliability       = rel_fig
+    st.session_state.horizons_df           = horizons_df
+    st.session_state.reliability_threshold = reliability_threshold
+    st.session_state.reliability_metric    = reliability_metric
     plt.close(rel_fig)
 
     st.markdown("**Reliability Horizon Table**")
@@ -845,9 +860,8 @@ if st.session_state.sim_done and st.session_state.rel_df is not None:
         .map(_colour_reliable_range, subset=["Reliable Range (%)"])
         .format({"Reliable Range (%)": "{:.1f}%", "Horizon Level": "{:.4f}"})
     )
-    st.dataframe(styled_horizons, use_container_width=True)
+    st.dataframe(styled_horizons, width='stretch')
 
-    # Best model banner
     if not horizons_df.empty:
         best = horizons_df.iloc[0]
         st.success(
@@ -867,36 +881,113 @@ if st.session_state.sim_done and st.session_state.rel_df is not None:
         mime="text/csv",
     )
 
-    # ─── Save Run (once per simulation) ───────────────────────────────────────
-    if not st.session_state.run_saved:
-        run_id, run_dir = save_run(
-            st.session_state.ds_name_snap,
-            st.session_state.settings,
-            st.session_state.distortions_used,
-            st.session_state.distortion_levels,
-            st.session_state.rf_res,
-            st.session_state.lr_res,
-            st.session_state.svm_res,
-            st.session_state.fig_main,
-            fig_analysis=st.session_state.fig_analysis,
-            analysis_df=st.session_state.analysis_df,
-            fig_reliability=rel_fig,
-            horizons_df=horizons_df,
-            reliability_threshold=reliability_threshold,
-            reliability_metric=reliability_metric,
-            fig_confusion=st.session_state.fig_confusion,
-            fig_degradation=st.session_state.fig_degradation,
-            summary_df=st.session_state.summary_df,
-        )
-        st.session_state.run_saved    = True
-        st.session_state.last_run_id  = run_id
-        st.session_state.last_run_dir = str(run_dir)
+# ─── Model Recommendation Engine (outside button block) ────────────────────────
+if st.session_state.sim_done and st.session_state.rel_df is not None:
 
-    if st.session_state.last_run_id:
-        st.info(
-            f"Run #{st.session_state.last_run_id:03d} saved to "
-            f"`{st.session_state.last_run_dir}/`"
+    st.markdown("---")
+    st.subheader("Model Recommendation Engine")
+
+    with st.expander("What is this?", expanded=False):
+        st.markdown(
+            "Scores every model on a **composite metric** combining robustness, "
+            "peak accuracy, and stability. Adjust the weights below to reflect your "
+            "deployment priorities. The radar chart compares all models; the bar chart "
+            "shows the final composite score."
         )
+
+    col_w1, col_w2, col_w3 = st.columns(3)
+    w_robustness = col_w1.slider("Robustness weight",    0.0, 1.0, 0.40, 0.05,
+                                  key="w_robustness")
+    w_peak       = col_w2.slider("Peak Accuracy weight", 0.0, 1.0, 0.35, 0.05,
+                                  key="w_peak")
+    w_stability  = col_w3.slider("Stability weight",     0.0, 1.0, 0.25, 0.05,
+                                  key="w_stability")
+
+    total_w = w_robustness + w_peak + w_stability
+    if abs(total_w - 1.0) > 0.01:
+        st.warning(
+            f"Weights sum to **{total_w:.2f}** — they will be normalised to 1.0 automatically."
+        )
+
+    with st.spinner("Building recommendation..."):
+        fig_rec, rec_df = build_recommendation(
+            st.session_state.rel_df,
+            MODEL_COLORS,
+            w_robustness=w_robustness,
+            w_peak=w_peak,
+            w_stability=w_stability,
+        )
+
+    st.pyplot(fig_rec, width='stretch')
+    st.session_state.fig_recommendation = fig_rec   # persisted for save_run below
+    st.session_state.rec_df             = rec_df
+    plt.close(fig_rec)
+
+    st.markdown("**Composite Score Breakdown**")
+    st.dataframe(rec_df.style.format({
+        "Robustness Score": "{:.2f}",
+        "Peak Accuracy":    "{:.3f}",
+        "Stability Score":  "{:.3f}",
+        "Composite Score":  "{:.3f}",
+    }), width='stretch')
+
+    if not rec_df.empty:
+        top = rec_df.iloc[0]
+        st.success(
+            f"**Top Recommendation: {top['Model']}** -- "
+            f"Composite Score `{top['Composite Score']:.3f}` "
+            f"(Robustness: {top['Robustness Score']:.1f} | "
+            f"Peak Acc: {top['Peak Accuracy']:.3f} | "
+            f"Stability: {top['Stability Score']:.3f})"
+        )
+
+    rec_csv = rec_df.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        "Download Recommendation Report CSV",
+        rec_csv,
+        file_name="model_recommendation.csv",
+        mime="text/csv",
+    )
+
+# ─── Save Run — fires AFTER recommendation engine so fig_recommendation is ready
+# ──────────────────────────────────────────────────────────────────────────────
+if (
+    st.session_state.sim_done
+    and st.session_state.rel_df is not None
+    and st.session_state.horizons_df is not None   # reliability must have rendered
+    and st.session_state.fig_recommendation is not None  # recommendation must have rendered
+    and not st.session_state.run_saved
+):
+    run_id, run_dir = save_run(
+        st.session_state.ds_name_snap,
+        st.session_state.settings,
+        st.session_state.distortions_used,
+        st.session_state.distortion_levels,
+        st.session_state.rf_res,
+        st.session_state.lr_res,
+        st.session_state.svm_res,
+        st.session_state.fig_main,
+        fig_analysis=st.session_state.fig_analysis,
+        analysis_df=st.session_state.analysis_df,
+        fig_reliability=st.session_state.fig_reliability,
+        horizons_df=st.session_state.horizons_df,
+        reliability_threshold=st.session_state.reliability_threshold,
+        reliability_metric=st.session_state.reliability_metric,
+        fig_confusion=st.session_state.fig_confusion,
+        fig_degradation=st.session_state.fig_degradation,
+        summary_df=st.session_state.summary_df,
+        fig_recommendation=st.session_state.fig_recommendation,
+        rec_df=st.session_state.rec_df,
+    )
+    st.session_state.run_saved    = True
+    st.session_state.last_run_id  = run_id
+    st.session_state.last_run_dir = str(run_dir)
+
+if st.session_state.last_run_id:
+    st.info(
+        f"Run #{st.session_state.last_run_id:03d} saved to "
+        f"`{st.session_state.last_run_dir}/`"
+    )
 
 # ─── Run History ───────────────────────────────────────────────────────────────
 st.markdown("---")
@@ -948,14 +1039,28 @@ else:
                 st.markdown("**Reliability Horizon Chart:**")
                 st.image(run["_reliability_png_path"], use_column_width=True)
 
-            # Degradation summary from JSON
+            if (run.get("_recommendation_png_path")
+                    and os.path.exists(run["_recommendation_png_path"])):
+                st.markdown("**Model Recommendation Dashboard:**")
+                st.image(run["_recommendation_png_path"], use_column_width=True)
+
+            rec_data = run.get("recommendation", [])
+            if rec_data:
+                st.markdown("**Recommendation Score Breakdown:**")
+                rec_history = pd.DataFrame(rec_data)
+                st.dataframe(rec_history, width='stretch')
+                if "Model" in rec_history.columns and "Composite Score" in rec_history.columns:
+                    top_hist = rec_history.iloc[0]
+                    st.success(
+                        f"Top pick for this run: **{top_hist['Model']}** "
+                        f"(Score: {top_hist['Composite Score']:.3f})"
+                    )
+
             deg_data = run.get("degradation", [])
             if deg_data:
                 st.markdown("**Degradation Summary:**")
-                deg_history = pd.DataFrame(deg_data)
-                st.dataframe(deg_history, use_container_width=True)
+                st.dataframe(pd.DataFrame(deg_data), width='stretch')
 
-            # Reliability summary from JSON
             rel_data = run.get("reliability", {})
             if rel_data and rel_data.get("horizons"):
                 st.markdown(
@@ -965,7 +1070,7 @@ else:
                 )
                 horizons_history = pd.DataFrame(rel_data["horizons"])
                 st.markdown("**Reliability Horizon Table:**")
-                st.dataframe(horizons_history, use_container_width=True)
+                st.dataframe(horizons_history, width='stretch')
 
                 if (not horizons_history.empty
                         and "Reliable Range (%)" in horizons_history.columns):
@@ -988,7 +1093,6 @@ else:
                         delta_color="inverse"
                     )
 
-            # Simulation results table
             rows      = []
             lvls      = run["levels"]
             rf_res_h  = run["results"]["random_forest"]
@@ -1008,4 +1112,4 @@ else:
                     "SVM AUC": round(svm_res_h[i].get("roc_auc",  0), 3),
                 })
             st.markdown("**Simulation Results:**")
-            st.dataframe(pd.DataFrame(rows), use_container_width=True)
+            st.dataframe(pd.DataFrame(rows), width='stretch')
