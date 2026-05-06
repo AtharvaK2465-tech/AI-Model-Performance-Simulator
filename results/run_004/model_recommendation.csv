@@ -1,0 +1,5 @@
+Model,Robustness Score,Peak Accuracy,Stability Score,Composite Score
+KNN,55.6,0.6789,0.9159,0.8836
+Gradient Boosting,50.61,0.7128,0.8702,0.6193
+XGBoost,47.12,0.7,0.8538,0.402
+Decision Tree,44.93,0.5639,0.9266,0.25

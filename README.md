@@ -22,6 +22,53 @@ Simulate how ML classification models degrade under real-world data distortions 
 
 ![reliability](reliability.png)
 
+## 🧠 Intelligent Model Recommendation Engine
+
+![recommendation_dashboard](recommendation_dashboard.png)
+
+Automatically recommends the **best ML model** for deployment based on robustness, reliability, degradation behaviour, and overall stability under distortions.
+
+The recommendation engine combines multiple analysis metrics into a unified scoring framework to identify the most production-ready model.
+
+### Recommendation Factors
+
+| Factor | Description |
+|---|---|
+| Robustness Score | Area-under-curve based stability across distortion levels |
+| Reliability Horizon | Distortion tolerance before model becomes unreliable |
+| Accuracy Retention | How much clean performance is preserved |
+| Degradation Rate | Speed of performance collapse under distortions |
+| Confidence Stability | Consistency of prediction confidence |
+| Distortion Resilience | Ability to withstand multiple distortion types |
+
+### Dashboard Outputs
+
+- **Overall Best Model Banner** — recommended deployment-ready model
+- **Weighted Ranking Table** — all models ranked by combined score
+- **Comparative Analysis Charts** — multi-factor robustness comparison
+- **Strengths & Weaknesses Summary** — automatic interpretation of each model
+- **Deployment Verdict** — identifies safest production candidate
+- **CSV Export** — downloadable recommendation analysis
+
+### Recommendation Logic
+
+The engine evaluates every model using weighted scoring across:
+- robustness,
+- reliability,
+- degradation stability,
+- confidence preservation,
+- and distortion resilience.
+
+Models that:
+- degrade slowly,
+- remain reliable longer,
+- preserve confidence,
+- and maintain balanced performance
+
+receive higher recommendation scores.
+
+This creates a more realistic deployment recommendation than accuracy alone.
+
 ---
 
 ## What it does

@@ -1,0 +1,283 @@
+{
+  "run_id": 4,
+  "timestamp": "2026-05-06 11:55:13",
+  "dataset": "student_placement_salary_elite_v2.csv",
+  "settings": {
+    "max_distortion_level": 0.4,
+    "num_levels": 5,
+    "test_size": 0.2,
+    "scale_data": true,
+    "random_seed": 42,
+    "selected_models": [
+      "Decision Tree",
+      "KNN",
+      "Gradient Boosting",
+      "XGBoost"
+    ]
+  },
+  "distortions_used": {
+    "gaussian_noise": false,
+    "covariate_drift": false,
+    "distribution_shift": false,
+    "class_imbalance": false,
+    "missing_values": true,
+    "label_noise": true,
+    "outlier_injection": true,
+    "feature_corruption": true
+  },
+  "levels": [
+    0.0,
+    0.1,
+    0.2,
+    0.30000000000000004,
+    0.4
+  ],
+  "results": {
+    "random_forest": [
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      }
+    ],
+    "logistic_regression": [
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      }
+    ],
+    "svm": [
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      },
+      {
+        "accuracy": 0,
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "roc_auc": 0,
+        "confidence": 0
+      }
+    ]
+  },
+  "reliability": {
+    "threshold": 0.55,
+    "metric": "accuracy",
+    "horizons": [
+      {
+        "Model": "KNN",
+        "Baseline": 0.6789,
+        "Threshold": 0.55,
+        "Horizon Level": 0.2095,
+        "Reliable Range (%)": 52.4,
+        "Status": "\ud83d\udfe1 Degrades Mid-Range",
+        "Rank": 1
+      },
+      {
+        "Model": "Gradient Boosting",
+        "Baseline": 0.7128,
+        "Threshold": 0.55,
+        "Horizon Level": 0.1317,
+        "Reliable Range (%)": 32.9,
+        "Status": "\ud83d\udd34 Degrades Early",
+        "Rank": 2
+      },
+      {
+        "Model": "XGBoost",
+        "Baseline": 0.7,
+        "Threshold": 0.55,
+        "Horizon Level": 0.128,
+        "Reliable Range (%)": 32.0,
+        "Status": "\ud83d\udd34 Degrades Early",
+        "Rank": 3
+      },
+      {
+        "Model": "Decision Tree",
+        "Baseline": 0.5639,
+        "Threshold": 0.55,
+        "Horizon Level": 0.0169,
+        "Reliable Range (%)": 4.2,
+        "Status": "\ud83d\udd34 Degrades Early",
+        "Rank": 4
+      }
+    ]
+  },
+  "degradation": [
+    {
+      "Rank": 1,
+      "Model": "KNN",
+      "Baseline": 0.6789,
+      "Worst": 0.4356,
+      "Abs Drop": 0.2433,
+      "% Drop": 35.84,
+      "Deg Rate/Level": 0.6083,
+      "Robustness Score": 81.89
+    },
+    {
+      "Rank": 2,
+      "Model": "Decision Tree",
+      "Baseline": 0.5639,
+      "Worst": 0.3394,
+      "Abs Drop": 0.2244,
+      "% Drop": 39.8,
+      "Deg Rate/Level": 0.5611,
+      "Robustness Score": 79.68
+    },
+    {
+      "Rank": 3,
+      "Model": "Gradient Boosting",
+      "Baseline": 0.7128,
+      "Worst": 0.3306,
+      "Abs Drop": 0.3822,
+      "% Drop": 53.62,
+      "Deg Rate/Level": 0.9556,
+      "Robustness Score": 71.01
+    },
+    {
+      "Rank": 4,
+      "Model": "XGBoost",
+      "Baseline": 0.7,
+      "Worst": 0.3439,
+      "Abs Drop": 0.3561,
+      "% Drop": 50.87,
+      "Deg Rate/Level": 0.8903,
+      "Robustness Score": 67.31
+    }
+  ],
+  "recommendation": [
+    {
+      "Model": "KNN",
+      "Robustness Score": 55.6,
+      "Peak Accuracy": 0.6789,
+      "Stability Score": 0.9159,
+      "Composite Score": 0.8836
+    },
+    {
+      "Model": "Gradient Boosting",
+      "Robustness Score": 50.61,
+      "Peak Accuracy": 0.7128,
+      "Stability Score": 0.8702,
+      "Composite Score": 0.6193
+    },
+    {
+      "Model": "XGBoost",
+      "Robustness Score": 47.12,
+      "Peak Accuracy": 0.7,
+      "Stability Score": 0.8538,
+      "Composite Score": 0.402
+    },
+    {
+      "Model": "Decision Tree",
+      "Robustness Score": 44.93,
+      "Peak Accuracy": 0.5639,
+      "Stability Score": 0.9266,
+      "Composite Score": 0.25
+    }
+  ],
+  "_png_path": "results\\run_004\\results.png",
+  "_analysis_png_path": "results\\run_004\\per_distortion.png",
+  "_reliability_png_path": "results\\run_004\\reliability.png",
+  "_confusion_png_path": "results\\run_004\\confusion_matrices.png",
+  "_degradation_png_path": "results\\run_004\\degradation_analysis.png",
+  "_recommendation_png_path": "results\\run_004\\recommendation_dashboard.png"
+}
