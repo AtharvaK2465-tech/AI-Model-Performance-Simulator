@@ -1,0 +1,8 @@
+Model,Robustness Score,Peak Accuracy,Stability Score,Composite Score
+Random Forest,59.42,0.983,0.7701,0.7424
+Decision Tree,59.06,0.996,0.7636,0.7322
+Gradient Boosting,58.97,0.9965,0.7637,0.7293
+XGBoost,57.91,0.9985,0.7641,0.6891
+KNN,57.24,0.713,0.9046,0.559
+Logistic Regression,56.08,0.7215,0.9056,0.5237
+SVM,49.65,0.851,0.8013,0.2356
